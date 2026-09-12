@@ -1,0 +1,11 @@
+---
+title: "Week 1 Journal"
+description: "Initial reflection on E155"
+author: "Thiven Anderson"
+date: "9/8/26"
+categories:
+  - reflection
+draft: false
+---
+
+Placeholder text for first blog post

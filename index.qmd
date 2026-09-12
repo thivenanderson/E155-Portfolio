@@ -1,0 +1,18 @@
+---
+title: "E155 Portfolio"
+image: images/headshot.JPG
+about:
+    template: jolla
+    links: 
+      - icon: linkedin
+        text: LinkedIn
+        href: https://www.linkedin.com/in/thiven-anderson-8b97b328b/
+      - icon: github
+        text: Github
+        href: https://github.com/thivenanderson
+---
+Thiven Anderson is a student at [Harvey Mudd College](https://hmc.edu) studying General Engineering with a particular interest in mechanical engineering, controls, and embedded systems. His coursework has given him experience across a broad range of engineering disciplines, including mechanical design, electronics, digital systems, control theory, and materials science.
+
+He has worked on interdisciplinary engineering projects ranging from FPGA-based digital systems and autonomous robots to precision mechanical components. He has also conducted materials research investigating non-toxic brass alloys and worked on industry-sponsored engineering projects that emphasize solving open-ended problems and meeting real-world stakeholder needs.
+
+Thiven is also involved in teaching and mentorship, having worked as a teaching assistant and tutor in subjects spanning engineering, mathematics, and the sciences. He enjoys breaking down technical concepts and helping other students develop an intuitive understanding of challenging material.
