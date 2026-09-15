@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Thiven Anderson">
+<meta name="dcterms.date" content="2026-09-15">
+<meta name="description" content="Time-multiplexed dual 7-segment display, reusable counters, and keypad scanning.">
+
+<title>Lab 2: Multiplexed 7-Segment Display and Keypad Scanner – E155 Portfolio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-172ba59bd5e0b52282274ba0c0cc16fc.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">E155 Portfolio</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../labs.html"> 
+<span class="menu-text">Labs</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../resources.html"> 
+<span class="menu-text">Resouces</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#hardware" id="toc-hardware" class="nav-link" data-scroll-target="#hardware">Hardware</a>
+  <ul class="collapse">
+  <li><a href="#multiplexed-7-segment-display" id="toc-multiplexed-7-segment-display" class="nav-link" data-scroll-target="#multiplexed-7-segment-display">Multiplexed 7-Segment Display</a></li>
+  <li><a href="#keypad-scanner" id="toc-keypad-scanner" class="nav-link" data-scroll-target="#keypad-scanner">Keypad Scanner</a></li>
+  </ul></li>
+  <li><a href="#verilog-structure-and-style" id="toc-verilog-structure-and-style" class="nav-link" data-scroll-target="#verilog-structure-and-style">Verilog Structure and Style</a>
+  <ul class="collapse">
+  <li><a href="#top-level-module" id="toc-top-level-module" class="nav-link" data-scroll-target="#top-level-module">Top-Level Module</a></li>
+  <li><a href="#parameterized-counter" id="toc-parameterized-counter" class="nav-link" data-scroll-target="#parameterized-counter">Parameterized Counter</a></li>
+  <li><a href="#keypad-scanning-module" id="toc-keypad-scanning-module" class="nav-link" data-scroll-target="#keypad-scanning-module">Keypad Scanning Module</a></li>
+  <li><a href="#reused-hexadecimal-7-segment-decoder" id="toc-reused-hexadecimal-7-segment-decoder" class="nav-link" data-scroll-target="#reused-hexadecimal-7-segment-decoder">Reused Hexadecimal 7-Segment Decoder</a></li>
+  </ul></li>
+  <li><a href="#simulation-and-verification" id="toc-simulation-and-verification" class="nav-link" data-scroll-target="#simulation-and-verification">Simulation and Verification</a>
+  <ul class="collapse">
+  <li><a href="#scanner-testbench" id="toc-scanner-testbench" class="nav-link" data-scroll-target="#scanner-testbench">Scanner Testbench</a></li>
+  <li><a href="#top-level-module-testbench" id="toc-top-level-module-testbench" class="nav-link" data-scroll-target="#top-level-module-testbench">Top-Level Module Testbench</a></li>
+  </ul></li>
+  <li><a href="#design-calculations" id="toc-design-calculations" class="nav-link" data-scroll-target="#design-calculations">Design Calculations</a>
+  <ul class="collapse">
+  <li><a href="#display-multiplexing-frequency" id="toc-display-multiplexing-frequency" class="nav-link" data-scroll-target="#display-multiplexing-frequency">Display Multiplexing Frequency</a></li>
+  <li><a href="#keypad-scanning-frequency" id="toc-keypad-scanning-frequency" class="nav-link" data-scroll-target="#keypad-scanning-frequency">Keypad Scanning Frequency</a></li>
+  <li><a href="#fpga-pin-current" id="toc-fpga-pin-current" class="nav-link" data-scroll-target="#fpga-pin-current">FPGA Pin Current</a></li>
+  </ul></li>
+  <li><a href="#schematic" id="toc-schematic" class="nav-link" data-scroll-target="#schematic">Schematic</a></li>
+  <li><a href="#schematic-1" id="toc-schematic-1" class="nav-link" data-scroll-target="#schematic-1">Schematic</a>
+  <ul class="collapse">
+  <li><a href="#dual-7-segment-display-schematic" id="toc-dual-7-segment-display-schematic" class="nav-link" data-scroll-target="#dual-7-segment-display-schematic">Dual 7-Segment Display Schematic</a></li>
+  <li><a href="#keypad-scanner-schematic" id="toc-keypad-scanner-schematic" class="nav-link" data-scroll-target="#keypad-scanner-schematic">Keypad Scanner Schematic</a></li>
+  </ul></li>
+  <li><a href="#block-diagram" id="toc-block-diagram" class="nav-link" data-scroll-target="#block-diagram">Block Diagram</a></li>
+  <li><a href="#requirements-verification" id="toc-requirements-verification" class="nav-link" data-scroll-target="#requirements-verification">Requirements Verification</a></li>
+  <li><a href="#ai-prototype-and-reflection" id="toc-ai-prototype-and-reflection" class="nav-link" data-scroll-target="#ai-prototype-and-reflection">AI Prototype and Reflection</a></li>
+  <li><a href="#time-spent" id="toc-time-spent" class="nav-link" data-scroll-target="#time-spent">Time Spent</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Lab 2: Multiplexed 7-Segment Display and Keypad Scanner</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">lab reports</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Time-multiplexed dual 7-segment display, reusable counters, and keypad scanning.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Thiven Anderson </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 15, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Lab 2 focused on using time multiplexing and modular SystemVerilog design to efficiently use the FPGA’s I/O pins. The first portion of the lab used a single hexadecimal 7-segment decoder to drive two independent hexadecimal digits on a dual 7-segment display. A counter and multiplexing logic were used to alternate between the two digits quickly enough that both appeared continuously illuminated.</p>
+<p>The second portion of the lab implemented a 4-output scanning circuit for a 4x4 matrix keypad. The scanner cycles through <code>1000</code>, <code>0100</code>, <code>0010</code>, and <code>0001</code>, allowing each row of the keypad to be asserted individually. The keypad columns are read back into the FPGA and passed to LEDs so that a pressed key causes the corresponding scanning signal to appear on an LED.</p>
+<p>The design reused a parameterized counter module for both the display multiplexing and keypad scanning functions. For hardware testing, the display and keypad portions were programmed as separate FPGA bitstreams on two boards. This implementation was approved for this lab; however, the SystemVerilog design and documentation are presented as a single top-level system containing both functions.</p>
+</section>
+<section id="hardware" class="level2">
+<h2 class="anchored" data-anchor-id="hardware">Hardware</h2>
+<section id="multiplexed-7-segment-display" class="level3">
+<h3 class="anchored" data-anchor-id="multiplexed-7-segment-display">Multiplexed 7-Segment Display</h3>
+<p>The dual 7-segment display was used to display two independent four-bit hexadecimal inputs, <code>s1[3:0]</code> and <code>s2[3:0]</code>. Rather than using a separate decoder for each digit, both digits share the same hexadecimal decoder and cathode connections. The FPGA rapidly switches between the two input values while enabling only the corresponding display anode.</p>
+<p>The multiplexing counter determines which digit is active. During the first half of the counter period, <code>s1</code> is passed to the decoder and the first anode is enabled. During the second half, <code>s2</code> is passed to the same decoder and the second anode is enabled. Because this switching occurs much faster than can be visually resolved, both digits appear to be illuminated continuously.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/PLACEHOLDER_SEVEN_SEG_HARDWARE.jpg" class="img-fluid figure-img" style="width:50.0%"></p>
+<figcaption>Figure 1: Multiplexed dual 7-segment display hardware.</figcaption>
+</figure>
+</div>
+</section>
+<section id="keypad-scanner" class="level3">
+<h3 class="anchored" data-anchor-id="keypad-scanner">Keypad Scanner</h3>
+<p>The keypad portion of the design uses four scanner outputs connected to the four keypad rows. The scanner cycles through the patterns <code>1000</code>, <code>0100</code>, <code>0010</code>, and <code>0001</code>, asserting one row at a time. The keypad columns are connected back to FPGA input pins. Pressing a key electrically connects the currently scanned row to its corresponding column.</p>
+<p>The column inputs are active-low in the implemented circuit, so the top-level module inverts <code>col[3:0]</code> before driving the four LEDs. As the scanner moves from row to row, a held key therefore causes the appropriate LED to blink when its row is asserted.</p>
+<p>The keypad interface was also designed to tolerate multiple simultaneous key presses using the required transistor/pullup arrangement rather than directly shorting actively driven FPGA outputs together.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/PLACEHOLDER_KEYPAD_HARDWARE.jpg" class="img-fluid figure-img" style="width:50.0%"></p>
+<figcaption>Figure 2: Keypad scanner hardware.</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="verilog-structure-and-style" class="level2">
+<h2 class="anchored" data-anchor-id="verilog-structure-and-style">Verilog Structure and Style</h2>
+<p>The source code for the project can be found in the associated <a href="https://github.com/thivenanderson/E155-Lab2">Github repository</a>.</p>
+<section id="top-level-module" class="level3">
+<h3 class="anchored" data-anchor-id="top-level-module">Top-Level Module</h3>
+<p>The top-level module connects the oscillator, display multiplexing logic, keypad scanner, 7-segment decoder, and FPGA I/O. The UPduino’s internal high-speed oscillator (<code>HSOSC</code>) is configured with <code>CLKHF_DIV = 2'b01</code>, producing the clock used by both counter-based functions.</p>
+<p>For the display, a parameterized instance of <code>lab2_ta_counter</code> generates the multiplexing count. The internal signal <code>dig_s</code> is low during the first half of the count and high during the second half. This signal controls both a multiplexer that selects between <code>s1</code> and <code>s2</code> and the <code>anode</code> output that selects the active display digit. The selected four-bit value is passed to the same hexadecimal 7-segment decoder developed in Lab 1.</p>
+<p>A separate <code>lab2_ta_scan</code> module generates the four keypad row signals. The keypad column inputs are then inverted with a single continuous assignment and passed directly to the LEDs.</p>
+<details>
+<summary>
+Full top-level SystemVerilog
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> lab2_ta #(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">parameter</span> <span class="kw">int</span> MAX_COUNT = <span class="dv">200</span>_000,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">parameter</span> <span class="kw">int</span> WIDTH = <span class="dv">18</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>)(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span> [<span class="dv">3</span>:<span class="dv">0</span>] s1, s2,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span> reset, enable,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span> [<span class="dv">3</span>:<span class="dv">0</span>] col,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> [<span class="dv">1</span>:<span class="dv">0</span>] anode,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> [<span class="dv">6</span>:<span class="dv">0</span>] seg,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> [<span class="dv">3</span>:<span class="dv">0</span>] led, scanner</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> int_osc;</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> dig_s;</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> [<span class="dv">3</span>:<span class="dv">0</span>] <span class="kw">s</span>;</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> [WIDTH<span class="dv">-1</span>:<span class="dv">0</span>] counter;</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Internal oscillator</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    HSOSC #<span class="dt">(.CLKHF_DIV</span>(<span class="bn">2'b01</span>))</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        hf_osc (</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>            .CLKHFPU(<span class="bn">1'b1</span>),</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>            .CLKHFEN(<span class="bn">1'b1</span>),</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>            .CLKHF(int_osc)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        );</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Dual display mux logic</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    lab2_ta_counter #(</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>        .WIDTH(WIDTH),</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        .MAX_COUNT(MAX_COUNT)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    ) count (</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>        .clk(int_osc),</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>        .reset(reset),</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>        .enable(enable),</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>        .counter(counter)</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> dig_s = (counter &gt;= MAX_COUNT/<span class="dv">2</span>);</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> <span class="kw">s</span> = dig_s ? s2 : s1;</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> anode = dig_s ? <span class="bn">2'b01</span> : <span class="bn">2'b10</span>;</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Reused Lab 1 7-segment decoder</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    lab1_ta_hex_seg_decoder decoder (</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>        .<span class="kw">s</span>(<span class="kw">s</span>),</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>        .seg(seg)</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Scanning module</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>    lab2_ta_scan #(</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>        .WIDTH(<span class="dv">24</span>),</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>        .MAX_COUNT(<span class="dv">11</span>_999_999)</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>    ) scan (</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>        .clk(int_osc),</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>        .reset(reset),</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>        .enable(enable),</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>        .scanner(scanner)</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Keypad column-to-LED logic</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> led = ~col;</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</section>
+<section id="parameterized-counter" class="level3">
+<h3 class="anchored" data-anchor-id="parameterized-counter">Parameterized Counter</h3>
+<p>A generic counter module is reused for both the display multiplexer and keypad scanner. The counter module is identical to the one for Lab 1, however, it outputs <code>counter</code> instead of blinking the LED.</p>
+<details>
+<summary>
+Parameterized counter SystemVerilog
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> lab2_ta_counter #(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">parameter</span> <span class="kw">int</span> WIDTH = <span class="dv">23</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">parameter</span> <span class="kw">int</span> MAX_COUNT = <span class="dv">5</span>_000_399</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span> <span class="kw">logic</span> clk, reset, enable,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> [WIDTH<span class="dv">-1</span>:<span class="dv">0</span>] counter</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">always_ff</span> @(<span class="kw">posedge</span> clk) <span class="kw">begin</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> (!reset)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            counter &lt;= <span class="dv">0</span>;</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> <span class="kw">if</span> (enable) <span class="kw">begin</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>            <span class="kw">if</span> (counter == MAX_COUNT)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                counter &lt;= <span class="dv">0</span>;</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            <span class="kw">else</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>                counter &lt;= counter + <span class="dv">1</span>;</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">end</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>            counter &lt;= counter;</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</section>
+<section id="keypad-scanning-module" class="level3">
+<h3 class="anchored" data-anchor-id="keypad-scanning-module">Keypad Scanning Module</h3>
+<p>The scanner is implemented as a separate module containing only an instance of the generic counter and continuous output logic. The total count range is divided into four sections. Each scanner output is high during one quarter of the counter period, producing the required sequence:</p>
+<p><code>1000</code> -&gt; <code>0100</code> -&gt; <code>0010</code> -&gt; <code>0001</code></p>
+<p>Because the scanner reuses the generic counter, its reset and enable behavior are inherited directly from the counter module.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">assign</span> scanner[<span class="dv">3</span>] = (counter &lt;= MAX_COUNT/<span class="dv">4</span>);</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">assign</span> scanner[<span class="dv">2</span>] = (counter &gt; MAX_COUNT/<span class="dv">4</span> &amp;&amp; counter &lt;= MAX_COUNT/<span class="dv">2</span>);</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">assign</span> scanner[<span class="dv">1</span>] = (counter &gt; MAX_COUNT/<span class="dv">2</span> &amp;&amp; counter &lt;= <span class="dv">3</span>*MAX_COUNT/<span class="dv">4</span>);</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">assign</span> scanner[<span class="dv">0</span>] = (counter &gt; <span class="dv">3</span>*MAX_COUNT/<span class="dv">4</span>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details>
+<summary>
+Full scanning module SystemVerilog
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> lab2_ta_scan #(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">parameter</span> WIDTH = <span class="dv">24</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">parameter</span> MAX_COUNT = <span class="dv">11</span>_999_999</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>)(</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span> <span class="kw">logic</span> clk, reset, enable,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> [<span class="dv">3</span>:<span class="dv">0</span>] scanner</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> [WIDTH<span class="dv">-1</span>:<span class="dv">0</span>] counter;</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    lab2_ta_counter #(</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        .WIDTH(WIDTH),</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        .MAX_COUNT(MAX_COUNT)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    ) count (</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        .clk(clk),</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        .reset(reset),</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        .enable(enable),</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        .counter(counter)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    );</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> scanner[<span class="dv">3</span>] = (counter &lt;= MAX_COUNT/<span class="dv">4</span>);</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> scanner[<span class="dv">2</span>] = (counter &gt; MAX_COUNT/<span class="dv">4</span> &amp;&amp; counter &lt;= MAX_COUNT/<span class="dv">2</span>);</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> scanner[<span class="dv">1</span>] = (counter &gt; MAX_COUNT/<span class="dv">2</span> &amp;&amp; counter &lt;= <span class="dv">3</span>*MAX_COUNT/<span class="dv">4</span>);</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> scanner[<span class="dv">0</span>] = (counter &gt; <span class="dv">3</span>*MAX_COUNT/<span class="dv">4</span>);</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</section>
+<section id="reused-hexadecimal-7-segment-decoder" class="level3">
+<h3 class="anchored" data-anchor-id="reused-hexadecimal-7-segment-decoder">Reused Hexadecimal 7-Segment Decoder</h3>
+<p>The hexadecimal decoder developed and verified in Lab 1 was reused without modification.</p>
+<details>
+<summary>
+7-segment decoder SystemVerilog snippet
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">always_comb</span> <span class="kw">begin</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> (<span class="kw">s</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="bn">4'h0</span>: seg = <span class="bn">7'b1000000</span>;</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="bn">4'h1</span>: seg = <span class="bn">7'b1111001</span>;</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="bn">4'h2</span>: seg = <span class="bn">7'b0100100</span>;</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="bn">4'h3</span>: seg = <span class="bn">7'b0110000</span>;</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Additional hexadecimal values</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="bn">4'hF</span>: seg = <span class="bn">7'b0001110</span>;</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">default</span>: seg = <span class="bn">7'b1111111</span>;</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">endcase</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</section>
+</section>
+<section id="simulation-and-verification" class="level2">
+<h2 class="anchored" data-anchor-id="simulation-and-verification">Simulation and Verification</h2>
+<p>The new Lab 2 modules and their top-level connections were verified using automated testbenches. Modules already tested in Lab 1, such as the hexadecimal decoder, were not independently simulated again.</p>
+<section id="scanner-testbench" class="level3">
+<h3 class="anchored" data-anchor-id="scanner-testbench">Scanner Testbench</h3>
+<p>The scanner testbench reduces the counter to <code>WIDTH = 4</code> and <code>MAX_COUNT = 11</code>. This allows all four scanner states to be observed after only a few clock cycles instead of requiring the full hardware count.</p>
+<p>After reset is released, assertions check that the scanner progresses through <code>1000</code>, <code>0100</code>, <code>0010</code>, and <code>0001</code> in order. The reduced parameter values preserve the same four-region structure used in the hardware implementation.</p>
+<details>
+<summary>
+Scanner simulation waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/la2_ta_scan_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Figure 3: Scanner module simulation waveform.</figcaption>
+</figure>
+</div>
+</details>
+<details>
+<summary>
+Scanner testbench SystemVerilog
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>lab2_ta_scan #<span class="dt">(.WIDTH</span>(<span class="dv">4</span>),<span class="dt"> .MAX_COUNT</span>(<span class="dv">11</span>)) dut (</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    .clk(clk),</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    .reset(reset),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    .enable(enable),</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    .scanner(scanner)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">// ...</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (scanner == <span class="bn">4'b1000</span>);</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">// ...</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (scanner == <span class="bn">4'b0100</span>);</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">// ...</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (scanner == <span class="bn">4'b0010</span>);</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">// ...</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (scanner == <span class="bn">4'b0001</span>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</section>
+<section id="top-level-module-testbench" class="level3">
+<h3 class="anchored" data-anchor-id="top-level-module-testbench">Top-Level Module Testbench</h3>
+<p>The top-level testbench verifies that the major modules are connected correctly and that the multiplexing logic selects the intended signals. The top-level display counter is simulated with <code>WIDTH = 3</code> and <code>MAX_COUNT = 5</code> to allow both display states to be reached quickly.</p>
+<p>The first portion checks that the scanner output reaches the top-level <code>scanner</code> port and that the active-low keypad column input is correctly inverted onto the LEDs.</p>
+<p>The display portion verifies the internal digit-select signal, selected hexadecimal input, and anode control.</p>
+<details>
+<summary>
+Top-level simulation waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/lab2_ta_toplevel_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Figure 4: Top-level multiplexing and keypad passthrough simulation waveform.</figcaption>
+</figure>
+</div>
+</details>
+<details>
+<summary>
+Top-level testbench SystemVerilog snippet
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>s1 = <span class="bn">4'b0001</span>;</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>s2 = <span class="bn">4'b1000</span>;</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>col = <span class="bn">4'b1110</span>;</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Test scanner connection and column logic</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (scanner == <span class="bn">4'b1000</span>);</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (led == <span class="bn">4'b0001</span>);</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Test first display</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (dut.dig_s == <span class="bn">1'b0</span>);</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (dut.<span class="kw">s</span> == <span class="bn">4'b0001</span>);</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (anode == <span class="bn">2'b10</span>);</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Advance counter and test second display</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="kw">repeat</span>(<span class="dv">3</span>) @(<span class="kw">posedge</span> dut.int_osc);</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (dut.dig_s == <span class="bn">1'b1</span>);</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (dut.<span class="kw">s</span> == <span class="bn">4'b1000</span>);</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="kw">assert</span> (anode == <span class="bn">2'b01</span>);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</section>
+</section>
+<section id="design-calculations" class="level2">
+<h2 class="anchored" data-anchor-id="design-calculations">Design Calculations</h2>
+<section id="display-multiplexing-frequency" class="level3">
+<h3 class="anchored" data-anchor-id="display-multiplexing-frequency">Display Multiplexing Frequency</h3>
+<p>The internal oscillator is operated at 24 MHz. The display counter uses <code>MAX_COUNT = 200,000</code>, so one complete counter cycle takes approximately</p>
+<p><span class="math display">\[
+T_{mux} = \frac{200001}{24\times10^6}
+\approx 8.33\text{ ms}
+\]</span></p>
+<p>giving a complete multiplexing cycle frequency of approximately</p>
+<p><span class="math display">\[
+f_{mux} = \frac{1}{T_{mux}}
+\approx 120\text{ Hz}.
+\]</span></p>
+<p>Each digit is enabled for approximately one half of this cycle, so the display switches between digits about every 4.17 ms. This switching rate is sufficiently fast that the two digits appear continuously illuminated rather than visibly alternating.</p>
+</section>
+<section id="keypad-scanning-frequency" class="level3">
+<h3 class="anchored" data-anchor-id="keypad-scanning-frequency">Keypad Scanning Frequency</h3>
+<p>The scanner uses the same 24 MHz clock and <code>MAX_COUNT = 11,999,999</code>. Including count zero, the complete scan contains 12,000,000 clock cycles. Therefore,</p>
+<p><span class="math display">\[
+T_{scan} = \frac{12,000,000}{24,000,000}
+= 0.5\text{ s}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+f_{scan} = \frac{1}{0.5}
+= 2\text{ Hz}.
+\]</span></p>
+<p>The counter period is split into four regions, so each row is asserted for approximately</p>
+<p><span class="math display">\[
+\frac{0.5}{4} = 0.125\text{ s}.
+\]</span></p>
+<p>This produces the required rotating scan pattern at the desired rate.</p>
+</section>
+<section id="fpga-pin-current" class="level3">
+<h3 class="anchored" data-anchor-id="fpga-pin-current">FPGA Pin Current</h3>
+<p>The NPN and PNP transistor circuits were designed to keep the current sourced or sunk by an FPGA pin below 8 mA. The NPN circuit uses a 2N3904 transistor, while the PNP circuit uses a 2N3906 transistor. Based on the transistor datasheets, a base-emitter voltage drop of approximately 0.7 V was used for the design calculations. With a 3.3 V FPGA supply, the voltage across the transistor base resistor is therefore</p>
+<p><span class="math display">\[
+V_B = V_{CC} - V_{BE}
+\]</span></p>
+<p><span class="math display">\[
+V_B = 3.3 - 0.7 = 2.6\text{ V}.
+\]</span></p>
+<p>A standard resistor value of 470 <span class="math inline">\(\Omega\)</span> was selected for both transistor base resistors. Using Ohm’s law, the resulting FPGA pin current is</p>
+<p><span class="math display">\[
+I_B = \frac{V_R}{R_B}
+= \frac{2.6}{470}
+= 0.00553\text{ A}
+\approx 5.53\text{ mA}.
+\]</span></p>
+<p>For the 2N3904 NPN transistor, the FPGA sources approximately 5.53 mA into the base when the transistor is turned on. For the 2N3906 PNP transistor, the FPGA sinks approximately 5.53 mA through the base resistor when the transistor is turned on. Therefore, the worst-case FPGA pin current for either transistor circuit is approximately 5.53 mA, which is below the 8 mA design limit.</p>
+</section>
+</section>
+<section id="schematic" class="level2">
+<h2 class="anchored" data-anchor-id="schematic">Schematic</h2>
+</section>
+<section id="schematic-1" class="level2">
+<h2 class="anchored" data-anchor-id="schematic-1">Schematic</h2>
+<p>Because the two portions of Lab 2 were tested separately in hardware, two schematics are included below: one for the multiplexed dual 7-segment display and one for the keypad scanner.</p>
+<section id="dual-7-segment-display-schematic" class="level3">
+<h3 class="anchored" data-anchor-id="dual-7-segment-display-schematic">Dual 7-Segment Display Schematic</h3>
+<p>The dual 7-segment display schematic shows the FPGA connections to the shared segment lines, digit-select circuitry, transistor drivers, and current-limiting resistors used to multiplex the two display digits.</p>
+<p>The <code>enable</code> and <code>reset</code> inputs, as well as the DIP switches used for the first hexadecimal digit input, are not shown because these components are already integrated onto the UPduino board. Internal FPGA pull-up resistors are also excluded from the schematic.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/lab2_dualseg_schematic.jpg" class="img-fluid figure-img" style="width:75.0%"></p>
+<figcaption>Figure 8: Dual 7-segment display schematic.</figcaption>
+</figure>
+</div>
+</section>
+<section id="keypad-scanner-schematic" class="level3">
+<h3 class="anchored" data-anchor-id="keypad-scanner-schematic">Keypad Scanner Schematic</h3>
+<p>The keypad scanner schematic shows the FPGA connections to the keypad row-driving transistor circuits, keypad column inputs, external pull-up resistors, and associated current-limiting resistors.</p>
+<p>The LED outputs used to display the keypad column signals are not shown because the LEDs are already integrated onto the UPduino board. Internal FPGA pull-up resistors are also excluded from the schematic.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/lab2_scan_schematic.jpg" class="img-fluid figure-img" style="width:75.0%"></p>
+<figcaption>Figure 9: Keypad scanner schematic.</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="block-diagram" class="level2">
+<h2 class="anchored" data-anchor-id="block-diagram">Block Diagram</h2>
+<p>The block diagram shows the logical organization of the complete SystemVerilog design. The <code>HSOSC</code> clock drives both parameterized counter-based functions. One counter controls the display multiplexer, which selects between <code>s1</code> and <code>s2</code> before passing the selected input to the single 7-segment decoder. The scanning module contains the second parameterized counter and converts its count into the four keypad row outputs. The keypad column inputs pass through inversion logic before driving the LEDs.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/lab2_blockd_diagram.jpg" class="img-fluid figure-img" style="width:75.0%"></p>
+<figcaption>Figure 9: Lab 2 FPGA block diagram.</figcaption>
+</figure>
+</div>
+</section>
+<section id="requirements-verification" class="level2">
+<h2 class="anchored" data-anchor-id="requirements-verification">Requirements Verification</h2>
+<p>The Lab 2 design implemented the required time-multiplexed dual 7-segment display and keypad scanning functions. A single hexadecimal decoder was reused for both display digits, while parameterized instances of the same generic counter module were used for display multiplexing and keypad scanning. The scanning module contains only the reusable counter and combinational output assignments, while the top-level module connects the oscillator, counter, decoder, scanner, multiplexing assignments, and keypad passthrough logic.</p>
+<p>Simulation verified the four scanner states and the main top-level connections. The top-level testbench also verified that the correct hexadecimal input and display anode were selected during each half of the multiplexing cycle.</p>
+<p>The completed design met all Lab 2 requirements.</p>
+</section>
+<section id="ai-prototype-and-reflection" class="level2">
+<h2 class="anchored" data-anchor-id="ai-prototype-and-reflection">AI Prototype and Reflection</h2>
+<p>For the AI prototype, I asked ChatGPT to generate SystemVerilog HDL that time multiplexes a single 7-segment decoder between two four-bit hexadecimal inputs. The initial prompt intentionally asked ChatGPT to disregard all previous E155 Lab 2 context so that the response would represent a fresh implementation based only on the information provided in the prompt.</p>
+In its first response, ChatGPT proposed using one combinational 7-segment decoder with an input multiplexer to select between the two four-bit inputs. It then routed the decoder output to one of two 7-segment outputs depending on a <code>select</code> signal. The initial design toggled <code>select</code> directly on each clock edge, although ChatGPT later noted that a counter should normally be used to reduce the multiplexing frequency when using a high-speed FPGA clock. It understood we are trying to generate a couple 100 Hz frequency from the hardware at hand.
+<details>
+<summary>
+AI Prototype Intial Prompt SystemVerilog
+</summary>
+<p>module seven_seg_mux ( input logic clk, input logic [3:0] in0, input logic [3:0] in1, output logic [6:0] seg0, output logic [6:0] seg1 );</p>
+<pre><code>logic select;
+logic [3:0] digit;
+logic [6:0] decoded_seg;
+
+// Toggle between the two displays
+always_ff @(posedge clk) begin
+    select &lt;= ~select;
+end
+
+// Select which input goes into the single decoder
+always_comb begin
+    if (select)
+        digit = in1;
+    else
+        digit = in0;
+end
+
+// Single common-anode seven-segment decoder
+// Format: abcdefg
+always_comb begin
+    case (digit)
+        4'h0: decoded_seg = 7'b0000001;
+        4'h1: decoded_seg = 7'b1001111;
+        4'h2: decoded_seg = 7'b0010010;
+        4'h3: decoded_seg = 7'b0000110;
+        4'h4: decoded_seg = 7'b1001100;
+        4'h5: decoded_seg = 7'b0100100;
+        4'h6: decoded_seg = 7'b0100000;
+        4'h7: decoded_seg = 7'b0001111;
+        4'h8: decoded_seg = 7'b0000000;
+        4'h9: decoded_seg = 7'b0000100;
+        4'hA: decoded_seg = 7'b0001000;
+        4'hB: decoded_seg = 7'b1100000;
+        4'hC: decoded_seg = 7'b0110001;
+        4'hD: decoded_seg = 7'b1000010;
+        4'hE: decoded_seg = 7'b0110000;
+        4'hF: decoded_seg = 7'b0111000;
+        default: decoded_seg = 7'b1111111;
+    endcase
+end
+
+// Route the single decoder output to the selected display
+// 1111111 = all segments off for common anode
+always_comb begin
+    if (select) begin
+        seg0 = 7'b1111111;
+        seg1 = decoded_seg;
+    end
+    else begin
+        seg0 = decoded_seg;
+        seg1 = 7'b1111111;
+    end
+end</code></pre>
+endmodule
+</details>
+<p>I then provided the Lab 1 top-level module, blink counter, and hexadecimal 7-segment decoder and asked ChatGPT to regenerate the design using the provided oscillator and decoder. The revised prototype instantiated the same <code>HSOSC</code> configuration used in Lab 1 and reused a single instance of <code>lab1_ta_hex_seg_decoder</code>. It added a counter to slow the 24 MHz oscillator and used a <code>select</code> signal to determine whether <code>s1</code> or <code>s2</code> was connected to the decoder.</p>
+<p>The AI-generated counter toggled the digit selection after a count of 11,999. With the 24 MHz oscillator, ChatGPT calculated that the selected display would change every 0.5 ms, giving each display an approximately 1 kHz refresh rate. The response also correctly recognized that the provided Lab 1 decoder used active-low segment outputs for a common-anode display.</p>
+<details>
+<summary>
+AI Prototype Secondary Prompt SystemVerilog
+</summary>
+<p>module seven_seg_time_mux ( input logic [3:0] s1, s2, input logic reset, output logic [6:0] seg1, seg2 );</p>
+<pre><code>logic int_osc;
+logic select;
+logic [3:0] mux_in;
+logic [6:0] decoded_seg;
+
+logic [14:0] counter;
+
+// Internal 24 MHz oscillator
+HSOSC #(.CLKHF_DIV(2'b01))
+    hf_osc (
+        .CLKHFPU(1'b1),
+        .CLKHFEN(1'b1),
+        .CLKHF(int_osc)
+    );
+
+// Slow down oscillator for display multiplexing
+always_ff @(posedge int_osc) begin
+    if (!reset) begin
+        counter &lt;= 0;
+        select  &lt;= 0;
+    end
+    else begin
+        if (counter == 15'd11999) begin
+            counter &lt;= 0;
+            select  &lt;= ~select;
+        end
+        else begin
+            counter &lt;= counter + 1;
+        end
+    end
+end
+
+// Select which 4-bit input goes into the single decoder
+always_comb begin
+    if (select)
+        mux_in = s2;
+    else
+        mux_in = s1;
+end
+
+// Use ONE instance of your existing seven-segment decoder
+lab1_ta_hex_seg_decoder decoder (
+    .s   (mux_in),
+    .seg (decoded_seg)
+);
+
+// Route decoder output to the selected display
+// Common-anode: 7'b1111111 turns all segments off
+always_comb begin
+    if (select) begin
+        seg1 = 7'b1111111;
+        seg2 = decoded_seg;
+    end
+    else begin
+        seg1 = decoded_seg;
+        seg2 = 7'b1111111;
+    end
+end</code></pre>
+endmodule
+</details>
+<p>The AI generated prototype succesfully generated accurate HDL that would map to hardware without any additional prompting. The only main changes bewtten the AI model and mine is that I have my counter as a submodule and also my modules are paramaterized. The way this code is written a parameter for max count could be added, but is not neccessary as counter logic is part of the top level module. Adding Lab 1 modules certainly improved the quality of the design, as it had a known frequency to base the counter off of instead of assuming an clock input signal at the exact desired frequency. I think overall the quality is very high and if I had given it more information in the first prompt about a decoder module and the ‘HSOSC’ it could have produced better code on the first shot.</p>
+</section>
+<section id="time-spent" class="level2">
+<h2 class="anchored" data-anchor-id="time-spent">Time Spent</h2>
+<p>Total time spent on Lab 2: <strong>12</strong></p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/thivenanderson\.github\.io\/E155-Portfolio\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
