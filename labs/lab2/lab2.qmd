@@ -384,7 +384,7 @@ Because the two portions of Lab 2 were tested separately in hardware, two schema
 
 The dual 7-segment display schematic shows the FPGA connections to the shared segment lines, digit-select circuitry, transistor drivers, and current-limiting resistors used to multiplex the two display digits.
 
-The `enable` and `reset` inputs, as well as the DIP switches used for the first hexadecimal digit input, are not shown because these components are already integrated onto the UPduino board. Internal FPGA pull-up resistors are also excluded from the schematic.
+The `enable` and `reset` inputs, are connected to the push buttons at pins 34 and 43. The DIP switches at pins 32, 35, 31, nd 37 are used for the first hexadecimal digit input. These are not shown because these components are already integrated onto the UPduino board. Internal FPGA pull-up resistors are also excluded from the schematic.
 
 ![Figure 8: Dual 7-segment display schematic.](images/lab2_dualseg_schematic.jpg){width=75%}
 
@@ -392,7 +392,7 @@ The `enable` and `reset` inputs, as well as the DIP switches used for the first 
 
 The keypad scanner schematic shows the FPGA connections to the keypad row-driving transistor circuits, keypad column inputs, external pull-up resistors, and associated current-limiting resistors.
 
-The LED outputs used to display the keypad column signals are not shown because the LEDs are already integrated onto the UPduino board. Internal FPGA pull-up resistors are also excluded from the schematic.
+The LED outputs used to display the keypad column signals are not shown because the LEDs are already integrated onto the UPduino board. They are at FPGA pins 21(bridged to MCU pin B3), 42, 38, and 28. Internal FPGA pull-up resistors are also excluded from the schematic.
 
 ![Figure 9: Keypad scanner schematic.](images/lab2_scan_schematic.jpg){width=75%}
 
