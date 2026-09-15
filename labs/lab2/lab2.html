@@ -616,7 +616,7 @@ I_B = \frac{V_R}{R_B}
 <section id="dual-7-segment-display-schematic" class="level3">
 <h3 class="anchored" data-anchor-id="dual-7-segment-display-schematic">Dual 7-Segment Display Schematic</h3>
 <p>The dual 7-segment display schematic shows the FPGA connections to the shared segment lines, digit-select circuitry, transistor drivers, and current-limiting resistors used to multiplex the two display digits.</p>
-<p>The <code>enable</code> and <code>reset</code> inputs, as well as the DIP switches used for the first hexadecimal digit input, are not shown because these components are already integrated onto the UPduino board. Internal FPGA pull-up resistors are also excluded from the schematic.</p>
+<p>The <code>enable</code> and <code>reset</code> inputs, are connected to the push buttons at pins 34 and 43. The DIP switches at pins 32, 35, 31, nd 37 are used for the first hexadecimal digit input. These are not shown because these components are already integrated onto the UPduino board. Internal FPGA pull-up resistors are also excluded from the schematic.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/lab2_dualseg_schematic.jpg" class="img-fluid figure-img" style="width:75.0%"></p>
@@ -627,7 +627,7 @@ I_B = \frac{V_R}{R_B}
 <section id="keypad-scanner-schematic" class="level3">
 <h3 class="anchored" data-anchor-id="keypad-scanner-schematic">Keypad Scanner Schematic</h3>
 <p>The keypad scanner schematic shows the FPGA connections to the keypad row-driving transistor circuits, keypad column inputs, external pull-up resistors, and associated current-limiting resistors.</p>
-<p>The LED outputs used to display the keypad column signals are not shown because the LEDs are already integrated onto the UPduino board. Internal FPGA pull-up resistors are also excluded from the schematic.</p>
+<p>The LED outputs used to display the keypad column signals are not shown because the LEDs are already integrated onto the UPduino board. They are at FPGA pins 21(bridged to MCU pin B3), 42, 38, and 28. Internal FPGA pull-up resistors are also excluded from the schematic.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/lab2_scan_schematic.jpg" class="img-fluid figure-img" style="width:75.0%"></p>
