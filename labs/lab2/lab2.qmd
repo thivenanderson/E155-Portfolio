@@ -25,7 +25,7 @@ The dual 7-segment display was used to display two independent four-bit hexadeci
 
 The multiplexing counter determines which digit is active. During the first half of the counter period, `s1` is passed to the decoder and the first anode is enabled. During the second half, `s2` is passed to the same decoder and the second anode is enabled. Because this switching occurs much faster than can be visually resolved, both digits appear to be illuminated continuously.
 
-![Figure 1: Multiplexed dual 7-segment display hardware.](images/PLACEHOLDER_SEVEN_SEG_HARDWARE.jpg){width=50%}
+![Figure 1: Multiplexed dual 7-segment display hardware.](images/lab2_dualseg_hardware.jpeg){width=50%}
 
 ### Keypad Scanner
 
@@ -35,7 +35,7 @@ The column inputs are active-low in the implemented circuit, so the top-level mo
 
 The keypad interface was also designed to tolerate multiple simultaneous key presses using the required transistor/pullup arrangement rather than directly shorting actively driven FPGA outputs together.
 
-![Figure 2: Keypad scanner hardware.](images/PLACEHOLDER_KEYPAD_HARDWARE.jpg){width=50%}
+![Figure 2: Keypad scanner hardware.](images/lab2_scanner_hardware.jpeg){width=50%}
 
 ## Verilog Structure and Style
 
