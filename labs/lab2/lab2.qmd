@@ -236,7 +236,7 @@ After reset is released, assertions check that the scanner progresses through `1
 <details>
 <summary>Scanner simulation waveform</summary>
 
-![Figure 3: Scanner module simulation waveform.](images/la2_ta_scan_tb_waveform.png)
+![Figure 3: Scanner module simulation waveform.](images/lab2_ta_scan_tb_wave_redo.png)
 
 </details>
 
@@ -374,7 +374,39 @@ $$
 
 For the 2N3904 NPN transistor, the FPGA sources approximately 5.53 mA into the base when the transistor is turned on. For the 2N3906 PNP transistor, the FPGA sinks approximately 5.53 mA through the base resistor when the transistor is turned on. Therefore, the worst-case FPGA pin current for either transistor circuit is approximately 5.53 mA, which is below the 8 mA design limit.
 
-## Schematic
+### 7-Segment LED Current-Limiting Resistors
+
+Current-limiting resistors were placed in series with the LED segments to keep the current through each FPGA-controlled segment below 8 mA. The calculation used a 3.3 V supply, an approximate transistor collector-emitter voltage drop of 0.2 V, and an LED forward voltage of 1.8 V.
+
+The voltage across the current-limiting resistor is therefore
+
+$$
+V_R = V_{CC} - V_{CE} - V_F
+$$
+
+$$
+V_R = 3.3 - 0.2 - 1.8 = 1.3\text{ V}.
+$$
+
+To limit the segment current to a maximum of 8 mA, the minimum required resistance is
+
+$$
+R = \frac{V_R}{I}
+$$
+
+$$
+R = \frac{1.3}{0.008}
+= 162.5\ \Omega.
+$$
+
+Therefore, the resistor must be greater than approximately $162.5\ \Omega$ to keep the segment current below 8 mA. A standard $180\ \Omega$ resistor can be used, resulting in an estimated segment current of
+
+$$
+I = \frac{1.3}{180}
+\approx 7.22\text{ mA}.
+$$
+
+This keeps the current through each illuminated segment below the 8 mA design limit.
 
 ## Schematic
 
@@ -386,7 +418,7 @@ The dual 7-segment display schematic shows the FPGA connections to the shared se
 
 The `enable` and `reset` inputs, are connected to the push buttons at pins 34 and 43. The DIP switches at pins 32, 35, 31, nd 37 are used for the first hexadecimal digit input. These are not shown because these components are already integrated onto the UPduino board. Internal FPGA pull-up resistors are also excluded from the schematic.
 
-![Figure 8: Dual 7-segment display schematic.](images/lab2_dualseg_schematic.jpg){width=75%}
+![Figure 8: Dual 7-segment display schematic.](images/lab2_dualseg_schematic_redo.jpg){width=75%}
 
 ### Keypad Scanner Schematic
 
@@ -394,7 +426,7 @@ The keypad scanner schematic shows the FPGA connections to the keypad row-drivin
 
 The LED outputs used to display the keypad column signals are not shown because the LEDs are already integrated onto the UPduino board. They are at FPGA pins 21(bridged to MCU pin B3), 42, 38, and 28. Internal FPGA pull-up resistors are also excluded from the schematic.
 
-![Figure 9: Keypad scanner schematic.](images/lab2_scan_schematic.jpg){width=75%}
+![Figure 9: Keypad scanner schematic.](images/lab2_scan_schematic_redo.jpg){width=75%}
 
 ## Block Diagram
 
