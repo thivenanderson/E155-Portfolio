@@ -19,7 +19,7 @@ The complete SystemVerilog source and testbenches are available in the [Lab 3 Gi
 
 The design reuses the 4x4 keypad interface and dual 7-segment display hardware from [Lab 2](../lab2/lab2.qmd). Keypad columns are active-low asynchronous FPGA inputs, while the row-driving and display-multiplexing hardware are reused from the previous lab.
 
-![Completed Lab 3 keypad and dual seven-segment display hardware.](images/lab3-hardware.jpeg){width=70%}
+![Completed Lab 3 keypad and dual seven-segment display hardware.](images/lab3-hardware.jpeg){width=50%}
 
 ## Verilog Structure and Style
 
@@ -265,7 +265,7 @@ The Lab 3 hardware combines the keypad and dual-display circuits developed in La
 
 Automatic simulation verifies single-key operation, one-time registration, debounce behavior, two-digit history, first-key priority, rejection of simultaneous multi-key input, and registration of the final remaining key after multi-key roll-off. The display connection is also checked automatically.
 
-**Requirements status:** Simulation covers the required single-key, debounce, two-digit history, and multi-key behaviors, and the hardware and schematic documentation are included. Before submission, confirm the physical display behavior and complete the remaining documentation items below.
+The physical display behavior also meets all required specifications, proficient and excellent.
 
 ## AI Prototype and Reflection
 
@@ -273,4 +273,4 @@ Automatic simulation verifies single-key operation, one-time registration, debou
 
 ## Time Spent
 
-Total time spent on Lab 3: **TODO hours**
+Total time spent on Lab 3: 25
