@@ -273,4 +273,4 @@ The physical display behavior also meets all required specifications, proficient
 
 ## Time Spent
 
-Total time spent on Lab 3: 25
+Total time spent on Lab 3: **25 hours**
