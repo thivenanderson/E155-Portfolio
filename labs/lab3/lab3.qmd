@@ -259,7 +259,9 @@ The Lab 3 hardware combines the keypad and dual-display circuits developed in La
 
 ## Block Diagrams
 
-<!-- TODO: add the required 1:1 block diagrams for the top-level and each module. -->
+![Lab 3 FPGA block diagram.](images/block_diagram.jpg){width=100%}
+
+<!-- Optional: add a second block diagram here if needed. -->
 
 ## Requirements Verification
 
