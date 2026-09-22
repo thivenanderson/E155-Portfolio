@@ -4,5 +4,5 @@ author: "Thiven Anderson"
 date: "9/8/26"
 categories:
   - lab reports
-draft: false
+draft: true
 ---
