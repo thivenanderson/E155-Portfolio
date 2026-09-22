@@ -3,7 +3,7 @@ title: "Lab 3: Keypad Scanner"
 author: "Thiven Anderson"
 date: "9/22/26"
 description: "Synchronous keypad scanning, debouncing, multi-key handling, and two-digit display."
-image: false
+image: images/lab3-hardware.jpeg
 categories:
   - lab reports
 draft: false
@@ -19,7 +19,7 @@ The complete SystemVerilog source and testbenches are available in the [Lab 3 Gi
 
 The design reuses the 4x4 keypad interface and dual 7-segment display hardware from [Lab 2](../lab2/lab2.qmd). Keypad columns are active-low asynchronous FPGA inputs, while the row-driving and display-multiplexing hardware are reused from the previous lab.
 
-<!-- TODO before submission: add Lab 3 hardware photo if desired. Confirm that the physical anode orientation places the newest digit on the required right-hand display. -->
+![Completed Lab 3 keypad and dual seven-segment display hardware.](images/lab3-hardware.jpeg){width=70%}
 
 ## Verilog Structure and Style
 
@@ -251,27 +251,25 @@ Radiant synthesis completes without latch or tri-state warnings in the committed
 
 </details>
 
-<!-- TODO before submission: add a legible synthesis/netlist screenshot explicitly showing no latches and no tristate buffers if required by the grader. -->
-
 ## Schematic
 
 The Lab 3 hardware combines the keypad and dual-display circuits developed in Lab 2.
 
-<!-- TODO before submission: add the final Lab 3 schematic with pin names/numbers, part numbers, component values, junctions, and title block. -->
+![Lab 3 circuit schematic.](images/lab3_schematic.jpg){width=100%}
 
 ## Block Diagrams
 
-<!-- TODO before submission: add the required 1:1 block diagrams for the top-level and each new module. The Lab 3 specs place the full block-diagram requirements in effect. -->
+<!-- TODO: add the required 1:1 block diagrams for the top-level and each module. -->
 
 ## Requirements Verification
 
 Automatic simulation verifies single-key operation, one-time registration, debounce behavior, two-digit history, first-key priority, rejection of simultaneous multi-key input, and registration of the final remaining key after multi-key roll-off. The display connection is also checked automatically.
 
-**Hardware/documentation status:** TODO before submission: confirm physical display orientation and hardware checkoff, then add the final schematic, block diagrams, and synthesis screenshot before stating that every Lab 3 specification is complete.
+**Requirements status:** Simulation covers the required single-key, debounce, two-digit history, and multi-key behaviors, and the hardware and schematic documentation are included. Before submission, confirm the physical display behavior and complete the remaining documentation items below.
 
 ## AI Prototype and Reflection
 
-<!-- TODO: add the Lab 3 AI prototype prompt/output and a short reflection. Keep this concise. -->
+<!-- TODO: add the AI prototype output/transcript and a brief reflection. -->
 
 ## Time Spent
 
