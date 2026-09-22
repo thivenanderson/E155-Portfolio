@@ -41,6 +41,7 @@ After a complete scan, the controller accepts a candidate only when `$onehot(key
 
 Once a key is registered, the controller remains in `PRESSED` until that saved key is released. Additional keys are therefore ignored while the first key remains held. If several keys are detected during scanning, no key is saved; when the condition returns to exactly one held key, that remaining key can be registered.
 
+This counter-based debounce is simple and deterministic. Its main tradeoff is a small fixed input delay. This delay of 10ms is excessive compared to oscilliscope measure debounce, but accounts for worst case scenarios.
 
 ### FSM Partitioning
 
