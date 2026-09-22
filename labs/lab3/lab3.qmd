@@ -41,7 +41,6 @@ After a complete scan, the controller accepts a candidate only when `$onehot(key
 
 Once a key is registered, the controller remains in `PRESSED` until that saved key is released. Additional keys are therefore ignored while the first key remains held. If several keys are detected during scanning, no key is saved; when the condition returns to exactly one held key, that remaining key can be registered.
 
-This counter-based debounce is simple and deterministic. Its main tradeoff is a small fixed input delay; a sample-history debounce could respond sooner but would require additional state and logic.
 
 ### FSM Partitioning
 
@@ -51,11 +50,11 @@ The controller handles sequencing, while the scanner and debounce counter keep t
 
 ```{mermaid}
 stateDiagram-v2
-    [*] --> SCAN
+    RESET --> SCAN
     SCAN --> CHECK: scan_done
     SCAN --> SCAN: !scan_done
     CHECK --> SAVE: one-hot keypad
-    CHECK --> SCAN: otherwise
+    CHECK --> SCAN: else
     SAVE --> SETTLE
     SETTLE --> WAIT
     WAIT --> SCAN: saved column released
@@ -108,7 +107,7 @@ The scanner testbench verifies the `1000 -> 0100 -> 0010 -> 0001` row sequence, 
 
 ### Keypad Builder
 
-Each scan tick stores the inverted synchronized columns into the correct four-bit portion of the 16-bit keypad map. The waveform builds `8000 -> 8400 -> 8420 -> 8421`, with `scan_done` asserted on the final row.
+Each scan tick stores the inverted synchronized columns into the correct four-bit portion of the 16-bit keypad map. The waveform builds `16'h8000 -> 16'h8400 -> 16'h8420 -> 16'h8421`, with `scan_done` asserted on the final row.
 
 <details>
 <summary>Keypad-builder testbench waveform</summary>
