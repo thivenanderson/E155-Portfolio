@@ -1,6 +1,6 @@
 ---
 title: "E155 Portfolio"
-image: images/headshot.JPG
+image: images/headshot_2026.JPG
 about:
     template: jolla
     links: 
