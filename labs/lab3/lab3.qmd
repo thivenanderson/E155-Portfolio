@@ -252,10 +252,11 @@ The Lab 3 hardware combines the keypad and dual-display circuits developed in La
 ![Lab 3 circuit schematic.](images/lab3_schematic.jpg){width=100%}
 
 ## Block Diagrams
+The top level diagram contains only instances of other modules and simple combinational logic.
+![Lab 3 FPGA top level block diagram.](images/block_diagram.jpg){width=100%}
 
-![Lab 3 FPGA block diagram.](images/block_diagram.jpg){width=100%}
-
-<!-- Optional: add a second block diagram here if needed. -->
+The scanner module diagram is also included as it contains an instance of the counter module.
+![Lab 3 FPGA top level block diagram.](images/block_diagrm_scanner.jpeg.jpg){width=100%}
 
 ## Requirements Verification
 
