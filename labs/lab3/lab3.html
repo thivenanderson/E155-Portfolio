@@ -7,7 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Thiven Anderson">
-<meta name="dcterms.date" content="2026-09-08">
+<meta name="dcterms.date" content="2026-09-22">
+<meta name="description" content="Synchronous keypad scanning, debouncing, multi-key handling, and two-digit display.">
 
 <title>Lab 3: Keypad Scanner – E155 Portfolio</title>
 <style>
@@ -75,6 +76,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script src="../../site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="../../site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="../../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="../../styles.css">
@@ -124,8 +128,47 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#hardware" id="toc-hardware" class="nav-link" data-scroll-target="#hardware">Hardware</a></li>
+  <li><a href="#verilog-structure-and-style" id="toc-verilog-structure-and-style" class="nav-link" data-scroll-target="#verilog-structure-and-style">Verilog Structure and Style</a>
+  <ul class="collapse">
+  <li><a href="#debouncing-and-multi-key-handling" id="toc-debouncing-and-multi-key-handling" class="nav-link" data-scroll-target="#debouncing-and-multi-key-handling">Debouncing and Multi-Key Handling</a></li>
+  <li><a href="#fsm-partitioning" id="toc-fsm-partitioning" class="nav-link" data-scroll-target="#fsm-partitioning">FSM Partitioning</a></li>
+  </ul></li>
+  <li><a href="#state-transition-diagram" id="toc-state-transition-diagram" class="nav-link" data-scroll-target="#state-transition-diagram">State Transition Diagram</a></li>
+  <li><a href="#state-transition-table" id="toc-state-transition-table" class="nav-link" data-scroll-target="#state-transition-table">State Transition Table</a></li>
+  <li><a href="#simulation-and-verification" id="toc-simulation-and-verification" class="nav-link" data-scroll-target="#simulation-and-verification">Simulation and Verification</a>
+  <ul class="collapse">
+  <li><a href="#synchronizer" id="toc-synchronizer" class="nav-link" data-scroll-target="#synchronizer">Synchronizer</a></li>
+  <li><a href="#keypad-scanner" id="toc-keypad-scanner" class="nav-link" data-scroll-target="#keypad-scanner">Keypad Scanner</a></li>
+  <li><a href="#keypad-builder" id="toc-keypad-builder" class="nav-link" data-scroll-target="#keypad-builder">Keypad Builder</a></li>
+  <li><a href="#keypad-decoder" id="toc-keypad-decoder" class="nav-link" data-scroll-target="#keypad-decoder">Keypad Decoder</a></li>
+  <li><a href="#saved-key-register" id="toc-saved-key-register" class="nav-link" data-scroll-target="#saved-key-register">Saved-Key Register</a></li>
+  <li><a href="#digit-shift-register" id="toc-digit-shift-register" class="nav-link" data-scroll-target="#digit-shift-register">Digit Shift Register</a></li>
+  <li><a href="#controller-fsm" id="toc-controller-fsm" class="nav-link" data-scroll-target="#controller-fsm">Controller FSM</a></li>
+  </ul></li>
+  <li><a href="#top-level-verification" id="toc-top-level-verification" class="nav-link" data-scroll-target="#top-level-verification">Top-Level Verification</a>
+  <ul class="collapse">
+  <li><a href="#asynchronous-reset" id="toc-asynchronous-reset" class="nav-link" data-scroll-target="#asynchronous-reset">Asynchronous Reset</a></li>
+  <li><a href="#test-1-bounce-debounce-and-single-registration" id="toc-test-1-bounce-debounce-and-single-registration" class="nav-link" data-scroll-target="#test-1-bounce-debounce-and-single-registration">Test 1: Bounce, Debounce, and Single Registration</a></li>
+  <li><a href="#test-2-two-digit-history" id="toc-test-2-two-digit-history" class="nav-link" data-scroll-target="#test-2-two-digit-history">Test 2: Two-Digit History</a></li>
+  <li><a href="#test-3-first-key-priority-and-roll-off" id="toc-test-3-first-key-priority-and-roll-off" class="nav-link" data-scroll-target="#test-3-first-key-priority-and-roll-off">Test 3: First-Key Priority and Roll-Off</a></li>
+  <li><a href="#tests-4-and-5-simultaneous-multi-key-input" id="toc-tests-4-and-5-simultaneous-multi-key-input" class="nav-link" data-scroll-target="#tests-4-and-5-simultaneous-multi-key-input">Tests 4 and 5: Simultaneous Multi-Key Input</a></li>
+  <li><a href="#display-multiplexing" id="toc-display-multiplexing" class="nav-link" data-scroll-target="#display-multiplexing">Display Multiplexing</a></li>
+  </ul></li>
+  <li><a href="#synthesis-output" id="toc-synthesis-output" class="nav-link" data-scroll-target="#synthesis-output">Synthesis Output</a></li>
+  <li><a href="#schematic" id="toc-schematic" class="nav-link" data-scroll-target="#schematic">Schematic</a></li>
+  <li><a href="#block-diagrams" id="toc-block-diagrams" class="nav-link" data-scroll-target="#block-diagrams">Block Diagrams</a></li>
+  <li><a href="#requirements-verification" id="toc-requirements-verification" class="nav-link" data-scroll-target="#requirements-verification">Requirements Verification</a></li>
+  <li><a href="#ai-prototype-and-reflection" id="toc-ai-prototype-and-reflection" class="nav-link" data-scroll-target="#ai-prototype-and-reflection">AI Prototype and Reflection</a></li>
+  <li><a href="#time-spent" id="toc-time-spent" class="nav-link" data-scroll-target="#time-spent">Time Spent</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -138,6 +181,11 @@ ul.task-list li input[type="checkbox"] {
   </div>
   </div>
 
+<div>
+  <div class="description">
+    Synchronous keypad scanning, debouncing, multi-key handling, and two-digit display.
+  </div>
+</div>
 
 
 <div class="quarto-title-meta">
@@ -152,7 +200,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">September 8, 2026</p>
+      <p class="date">September 22, 2026</p>
     </div>
   </div>
   
@@ -164,8 +212,800 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Lab 3 extends the Lab 2 keypad scanner into a complete keypad interface. The FPGA scans a 4x4 keypad, synchronizes the asynchronous column inputs, rejects switch bounce and invalid multi-key conditions, and displays the two most recent valid hexadecimal keys on the dual 7-segment display. Each valid press is registered once regardless of hold time.</p>
+<p>The complete SystemVerilog source and testbenches are available in the <a href="https://github.com/thivenanderson/E155-Lab3">Lab 3 GitHub repository</a>.</p>
+</section>
+<section id="hardware" class="level2">
+<h2 class="anchored" data-anchor-id="hardware">Hardware</h2>
+<p>The design reuses the 4x4 keypad interface and dual 7-segment display hardware from <a href="../../labs/lab2/lab2.html">Lab 2</a>. Keypad columns are active-low asynchronous FPGA inputs, while the row-driving and display-multiplexing hardware are reused from the previous lab.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/lab3-hardware.jpeg" class="img-fluid figure-img" style="width:50.0%"></p>
+<figcaption>Completed Lab 3 keypad and dual seven-segment display hardware.</figcaption>
+</figure>
+</div>
+</section>
+<section id="verilog-structure-and-style" class="level2">
+<h2 class="anchored" data-anchor-id="verilog-structure-and-style">Verilog Structure and Style</h2>
+<p>The top-level module contains only module instantiations and simple combinational connections. Previously verified Lab 1/2 modules are reused for the hexadecimal decoder and parameterized counters.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Module</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>lab3_ta_sync</code></td>
+<td>Two-flop synchronization of the four asynchronous keypad columns</td>
+</tr>
+<tr class="even">
+<td><code>lab3_ta_scanner</code></td>
+<td>Reused counter plus combinational logic to scan the four keypad rows</td>
+</tr>
+<tr class="odd">
+<td><code>lab3_ta_keypad_builder</code></td>
+<td>Captures each scanned row into a 16-bit keypad map</td>
+</tr>
+<tr class="even">
+<td><code>lab3_ta_keypad_decoder</code></td>
+<td>Converts a one-hot keypad map into row, column, and hexadecimal values</td>
+</tr>
+<tr class="odd">
+<td><code>lab3_ta_controller</code></td>
+<td>Coordinates scanning, debounce timing, registration, and key release</td>
+</tr>
+<tr class="even">
+<td><code>lab3_ta_savedkey_sr</code></td>
+<td>Stores the row and column of the candidate key</td>
+</tr>
+<tr class="odd">
+<td><code>lab3_ta_digit_sr</code></td>
+<td>Stores the newest and previous hexadecimal digits</td>
+</tr>
+</tbody>
+</table>
+<section id="debouncing-and-multi-key-handling" class="level3">
+<h3 class="anchored" data-anchor-id="debouncing-and-multi-key-handling">Debouncing and Multi-Key Handling</h3>
+<p>After a complete scan, the controller accepts a candidate only when <code>$onehot(keypad)</code> is true. The selected row is then held active while the two-stage synchronizer settles. A reused counter requires the saved column to remain asserted for approximately 10 ms before generating a one-cycle <code>shift_enable</code> pulse.</p>
+<p>Once a key is registered, the controller remains in <code>PRESSED</code> until that saved key is released. Additional keys are therefore ignored while the first key remains held. If several keys are detected during scanning, no key is saved; when the condition returns to exactly one held key, that remaining key can be registered.</p>
+<p>This counter-based debounce is simple and deterministic. Its main tradeoff is a small fixed input delay. This delay of 10ms is excessive compared to oscilliscope measure debounce, but accounts for worst case scenarios.</p>
+</section>
+<section id="fsm-partitioning" class="level3">
+<h3 class="anchored" data-anchor-id="fsm-partitioning">FSM Partitioning</h3>
+<p>The controller handles sequencing, while the scanner and debounce counter keep their own timing state and communicate with the controller using <code>scan_done</code>, <code>db_done</code>, reset, and enable signals. This keeps new state out of the top-level module and allows each stateful block to be tested independently.</p>
+</section>
+</section>
+<section id="state-transition-diagram" class="level2">
+<h2 class="anchored" data-anchor-id="state-transition-diagram">State Transition Diagram</h2>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">stateDiagram-v2
+    RESET --&gt; SCAN
+    SCAN --&gt; CHECK: scan_done
+    SCAN --&gt; SCAN: !scan_done
+    CHECK --&gt; SAVE: one-hot keypad
+    CHECK --&gt; SCAN: else
+    SAVE --&gt; SETTLE
+    SETTLE --&gt; WAIT
+    WAIT --&gt; SCAN: saved column released
+    WAIT --&gt; PULSE: db_done
+    WAIT --&gt; WAIT: held and !db_done
+    PULSE --&gt; PRESSED
+    PRESSED --&gt; PRESSED: saved column low
+    PRESSED --&gt; SCAN: saved column released
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="state-transition-table" class="level2">
+<h2 class="anchored" data-anchor-id="state-transition-table">State Transition Table</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>State</th>
+<th>Next-state condition</th>
+<th>Main asserted outputs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SCAN</code></td>
+<td><code>scan_done</code> -&gt; <code>CHECK</code>; otherwise <code>SCAN</code></td>
+<td><code>scan_enable</code>, <code>scan_reset</code></td>
+</tr>
+<tr class="even">
+<td><code>CHECK</code></td>
+<td>one-hot keypad -&gt; <code>SAVE</code>; otherwise <code>SCAN</code></td>
+<td><code>save_enable</code> for a valid one-hot key</td>
+</tr>
+<tr class="odd">
+<td><code>SAVE</code></td>
+<td>always -&gt; <code>SETTLE</code></td>
+<td>none</td>
+</tr>
+<tr class="even">
+<td><code>SETTLE</code></td>
+<td>always -&gt; <code>WAIT</code></td>
+<td>none</td>
+</tr>
+<tr class="odd">
+<td><code>WAIT</code></td>
+<td>released -&gt; <code>SCAN</code>; <code>db_done</code> -&gt; <code>PULSE</code>; otherwise <code>WAIT</code></td>
+<td><code>db_reset</code>, <code>db_enable</code></td>
+</tr>
+<tr class="even">
+<td><code>PULSE</code></td>
+<td>always -&gt; <code>PRESSED</code></td>
+<td><code>shift_enable</code></td>
+</tr>
+<tr class="odd">
+<td><code>PRESSED</code></td>
+<td>released -&gt; <code>SCAN</code>; otherwise <code>PRESSED</code></td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="simulation-and-verification" class="level2">
+<h2 class="anchored" data-anchor-id="simulation-and-verification">Simulation and Verification</h2>
+<p>Every new module is covered by an automatic testbench. The previously verified generic counter and hexadecimal decoder are reused from <a href="../../labs/lab2/lab2.html">Lab 2</a> and <a href="../../labs/lab1/lab1.html">Lab 1</a>, respectively, so their standalone simulations are not repeated.</p>
+<p>The top-level keypad stimulus models active-low columns, asynchronous press timing, a transition directly on a system-clock edge, and switch bounce.</p>
+<section id="synchronizer" class="level3">
+<h3 class="anchored" data-anchor-id="synchronizer">Synchronizer</h3>
+<p>The waveform shows the two-stage delay: an asynchronous change first reaches the internal first-stage register and then appears at <code>q</code> on the following rising edge.</p>
+<details>
+<summary>
+Synchronizer testbench waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/sync_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Synchronizer waveform showing the two flip-flop synchronization delay.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="keypad-scanner" class="level3">
+<h3 class="anchored" data-anchor-id="keypad-scanner">Keypad Scanner</h3>
+<p>The scanner testbench verifies the <code>1000 -&gt; 0100 -&gt; 0010 -&gt; 0001</code> row sequence, matching row indices, scan ticks, wraparound, and enable behavior.</p>
+<details>
+<summary>
+Scanner testbench waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/scanner_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Scanner waveform showing all four row selections, scan ticks, wraparound, and enable hold.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="keypad-builder" class="level3">
+<h3 class="anchored" data-anchor-id="keypad-builder">Keypad Builder</h3>
+<p>Each scan tick stores the inverted synchronized columns into the correct four-bit portion of the 16-bit keypad map. The waveform builds <code>16'h8000 -&gt; 16'h8400 -&gt; 16'h8420 -&gt; 16'h8421</code>, with <code>scan_done</code> asserted on the final row.</p>
+<details>
+<summary>
+Keypad-builder testbench waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/keypad_builder_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Keypad-builder waveform showing each row captured into the correct nibble and scan_done on the fourth row.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="keypad-decoder" class="level3">
+<h3 class="anchored" data-anchor-id="keypad-decoder">Keypad Decoder</h3>
+<p>The combinational decoder testbench steps through all 16 one-hot keypad positions and verifies the corresponding hexadecimal, row, and column outputs.</p>
+<details>
+<summary>
+Keypad-decoder testbench waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/keypad_decoder_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Decoder waveform covering all 16 keypad positions and hexadecimal outputs.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="saved-key-register" class="level3">
+<h3 class="anchored" data-anchor-id="saved-key-register">Saved-Key Register</h3>
+<p>The saved-key register captures the decoded row and column only when enabled and holds its previous value while disabled.</p>
+<details>
+<summary>
+Saved-key register testbench waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/savedkey_sr_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Saved-key waveform showing enabled updates and value retention while disabled.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="digit-shift-register" class="level3">
+<h3 class="anchored" data-anchor-id="digit-shift-register">Digit Shift Register</h3>
+<p>The display register resets to <code>00</code>, loads <code>A</code>, shifts to <code>5A</code>, holds while disabled, and then shifts to <code>C5</code>.</p>
+<details>
+<summary>
+Digit shift-register testbench waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/digit_sr_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Digit-register waveform showing reset, shifting, and enable hold behavior.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="controller-fsm" class="level3">
+<h3 class="anchored" data-anchor-id="controller-fsm">Controller FSM</h3>
+<p>The controller waveform covers asynchronous reset, rejection of a multi-key map, a valid <code>SCAN -&gt; CHECK -&gt; SAVE -&gt; SETTLE -&gt; WAIT -&gt; PULSE -&gt; PRESSED</code> sequence, debounce completion, one-cycle <code>shift_enable</code>, held-key behavior, release, and return to scanning.</p>
+<details>
+<summary>
+Controller testbench waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/controller_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Controller waveform exercising the major state transitions and control outputs.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+</section>
+<section id="top-level-verification" class="level2">
+<h2 class="anchored" data-anchor-id="top-level-verification">Top-Level Verification</h2>
+<section id="asynchronous-reset" class="level3">
+<h3 class="anchored" data-anchor-id="asynchronous-reset">Asynchronous Reset</h3>
+<p>Reset immediately returns the controller to <code>SCAN</code> and clears the saved key and both displayed digits.</p>
+<details>
+<summary>
+Top-level reset waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/top_reset_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Top-level asynchronous reset showing SCAN state and cleared saved/digit registers.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="test-1-bounce-debounce-and-single-registration" class="level3">
+<h3 class="anchored" data-anchor-id="test-1-bounce-debounce-and-single-registration">Test 1: Bounce, Debounce, and Single Registration</h3>
+<p>The first waveform shows a bounced press of key <code>1</code> while the keypad continues scanning. After the complete keypad map contains one valid key, the controller leaves <code>SCAN</code> for <code>CHECK</code>.</p>
+<details>
+<summary>
+Test 1a waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/top_test1a_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Test 1a: bounced key-1 input is scanned before the controller enters CHECK.</figcaption>
+</figure>
+</div>
+</details>
+<p>The second waveform shows the saved column settling through the synchronizer, the debounce counter reaching its terminal count, a one-cycle <code>shift_enable</code> pulse, and <code>digit1</code> updating to <code>1</code>. The controller then remains in <code>PRESSED</code>, preventing repeated registration while the key stays held.</p>
+<details>
+<summary>
+Test 1b waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/top_test1b_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Test 1b: synchronization, debounce completion, one-cycle shift pulse, and single registration of key 1.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="test-2-two-digit-history" class="level3">
+<h3 class="anchored" data-anchor-id="test-2-two-digit-history">Test 2: Two-Digit History</h3>
+<p>A valid press of key <code>5</code> produces the normal controller sequence and shifts the display history from <code>1,0</code> to newest=<code>5</code>, previous=<code>1</code>.</p>
+<details>
+<summary>
+Test 2 waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/top_test2_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Test 2: key 5 registers and shifts the stored display history from 1,0 to 5,1.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="test-3-first-key-priority-and-roll-off" class="level3">
+<h3 class="anchored" data-anchor-id="test-3-first-key-priority-and-roll-off">Test 3: First-Key Priority and Roll-Off</h3>
+<p>Key <code>2</code> registers first. Key <code>9</code> is then pressed while <code>2</code> remains held; the controller stays in <code>PRESSED</code> and the display remains unchanged. When <code>2</code> is released while <code>9</code> remains held, scanning resumes and <code>9</code> becomes the next valid key.</p>
+<details>
+<summary>
+Test 3 waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/top_test3_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Test 3: key 9 is ignored while key 2 owns the press, then registers after key 2 is released.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="tests-4-and-5-simultaneous-multi-key-input" class="level3">
+<h3 class="anchored" data-anchor-id="tests-4-and-5-simultaneous-multi-key-input">Tests 4 and 5: Simultaneous Multi-Key Input</h3>
+<p>Keys <code>3</code> and <code>C</code> are initially held together. The keypad map is not one-hot, so the controller continues scanning and the stored digits remain <code>9,2</code>. After <code>3</code> is released, <code>C</code> is the only remaining key and is registered as the next digit.</p>
+<details>
+<summary>
+Tests 4 and 5 waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/top_test4_5_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Tests 4 and 5: simultaneous keys are rejected; after roll-off to only C, C registers and the prior 9 shifts back.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="display-multiplexing" class="level3">
+<h3 class="anchored" data-anchor-id="display-multiplexing">Display Multiplexing</h3>
+<p>The final output test verifies the top-level connection from the digit registers through the reused display multiplexer and hexadecimal decoder. The saved waveform shows the <code>C</code> phase with the corresponding anode and segment output; the automatic testbench also asserts the opposite phase for the stored <code>9</code>.</p>
+<details>
+<summary>
+Top-level display-multiplexing waveform
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/top_display_mux_tb_waveform.png" class="img-fluid figure-img"></p>
+<figcaption>Display-multiplexing waveform showing the selected C digit, anode, and segment code.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+</section>
+<section id="synthesis-output" class="level2">
+<h2 class="anchored" data-anchor-id="synthesis-output">Synthesis Output</h2>
+<p>Radiant synthesis completes without latch or tri-state warnings in the committed synthesis message log.</p>
+
+</section>
+<section id="schematic" class="level2">
+<h2 class="anchored" data-anchor-id="schematic">Schematic</h2>
+<p>The Lab 3 hardware combines the keypad and dual-display circuits developed in Lab 2.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/lab3_schematic.jpg" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>Lab 3 circuit schematic.</figcaption>
+</figure>
+</div>
+</section>
+<section id="block-diagrams" class="level2">
+<h2 class="anchored" data-anchor-id="block-diagrams">Block Diagrams</h2>
+<p>The top level diagram contains only instances of other modules and simple combinational logic. <img src="images/block_diagram.jpg" class="img-fluid" style="width:100.0%" alt="Lab 3 FPGA top level block diagram."></p>
+<p>The scanning module block diagram is also included as it contains an instance of the counter module. <img src="images/block_diagrm_scanner.jpeg" class="img-fluid" style="width:100.0%" alt="Lab 3 FPGA scanning module block diagram."></p>
+</section>
+<section id="requirements-verification" class="level2">
+<h2 class="anchored" data-anchor-id="requirements-verification">Requirements Verification</h2>
+<p>Automatic simulation verifies single-key operation, one-time registration, debounce behavior, two-digit history, first-key priority, rejection of simultaneous multi-key input, and registration of the final remaining key after multi-key roll-off. The display connection is also checked automatically.</p>
+<p>The physical display behavior also meets all required specifications, proficient and excellent.</p>
+</section>
+<section id="ai-prototype-and-reflection" class="level2">
+<h2 class="anchored" data-anchor-id="ai-prototype-and-reflection">AI Prototype and Reflection</h2>
+<p>Using ChatGPT and the provided prompt the model succesfully produced HDL that compiled after only one error. This error was the same as lab 1 where the model used outdated syntax to instantiate the high-frequency oscillator.</p>
+Preliminary reviews of the code suggest that it would not succesfully handle excellency roll off specification, however, it has the base structure down and used a similar full-keypad sweep methodology. I believe this shows it can be a very useful tool that does not make syntax errors, but all code must be closely reviewed and very specific prompts must be given.
+<details>
+<summary>
+AI Prototype Prompt SystemVerilog
+</summary>
+<p>// ============================================================ // Rate / clock-enable generator // Generates a one-system-clock-wide tick at approximately TICK_HZ. // ============================================================ module rate_tick #( parameter integer CLK_HZ = 20_000_000, parameter integer TICK_HZ = 200 )( input logic clk, input logic reset_n, output logic tick );</p>
+<pre><code>localparam integer DIV = CLK_HZ / TICK_HZ;
+localparam integer WIDTH = $clog2(DIV);
+
+logic [WIDTH-1:0] count;
+
+always_ff @(posedge clk) begin
+    if (!reset_n) begin
+        count &lt;= '0;
+        tick  &lt;= 1'b0;
+    end
+    else begin
+        tick &lt;= 1'b0;
+
+        if (count == DIV-1) begin
+            count &lt;= '0;
+            tick  &lt;= 1'b1;
+        end
+        else begin
+            count &lt;= count + 1'b1;
+        end
+    end
+end</code></pre>
+<p>endmodule</p>
+<p>// ============================================================ // 4x4 keypad scanner // // col_n : active-low column drive // row_n : active-low row inputs // // A column remains selected for an entire scan interval, so the // row signals have several milliseconds to settle before sampling. // // Once a key is detected: // SCAN -&gt; WAIT_RELEASE // // WAIT_RELEASE continues scanning every column. A new key cannot // register until one complete 4-column sweep contains no presses. // ============================================================ module keypad_scanner_4x4 ( input logic clk, input logic reset_n, input logic scan_tick,</p>
+<pre><code>input  logic [3:0] row_n,
+output logic [3:0] col_n,
+
+output logic       key_valid,
+output logic [3:0] key_code</code></pre>
+<p>);</p>
+<pre><code>typedef enum logic {
+    SCAN,
+    WAIT_RELEASE
+} state_t;
+
+state_t state;
+
+logic [1:0] col_idx;
+
+// Synchronize external keypad row signals into FPGA clock domain.
+logic [3:0] row_sync1;
+logic [3:0] row_sync2;
+
+logic       release_sweep_active;
+logic       release_sweep_any;
+
+// --------------------------------------------------------
+// Input synchronizer
+// --------------------------------------------------------
+always_ff @(posedge clk) begin
+    if (!reset_n) begin
+        row_sync1 &lt;= 4'b1111;
+        row_sync2 &lt;= 4'b1111;
+    end
+    else begin
+        row_sync1 &lt;= row_n;
+        row_sync2 &lt;= row_sync1;
+    end
+end
+
+// --------------------------------------------------------
+// Drive exactly one column low
+// --------------------------------------------------------
+always_comb begin
+    col_n = 4'b1111;
+
+    case (col_idx)
+        2'd0: col_n = 4'b1110;
+        2'd1: col_n = 4'b1101;
+        2'd2: col_n = 4'b1011;
+        2'd3: col_n = 4'b0111;
+        default: col_n = 4'b1111;
+    endcase
+end
+
+// --------------------------------------------------------
+// Key lookup
+//
+// Example hexadecimal keypad layout:
+//
+//        COL0 COL1 COL2 COL3
+// ROW0     1    2    3    A
+// ROW1     4    5    6    B
+// ROW2     7    8    9    C
+// ROW3     E    0    F    D
+//
+// Change this function if the physical keypad is wired
+// differently.
+// --------------------------------------------------------
+function automatic logic [3:0] decode_key(
+    input logic [1:0] column,
+    input logic [1:0] row
+);
+    begin
+        case ({row, column})
+            4'b0000: decode_key = 4'h1;
+            4'b0001: decode_key = 4'h2;
+            4'b0010: decode_key = 4'h3;
+            4'b0011: decode_key = 4'hA;
+
+            4'b0100: decode_key = 4'h4;
+            4'b0101: decode_key = 4'h5;
+            4'b0110: decode_key = 4'h6;
+            4'b0111: decode_key = 4'hB;
+
+            4'b1000: decode_key = 4'h7;
+            4'b1001: decode_key = 4'h8;
+            4'b1010: decode_key = 4'h9;
+            4'b1011: decode_key = 4'hC;
+
+            4'b1100: decode_key = 4'hE;
+            4'b1101: decode_key = 4'h0;
+            4'b1110: decode_key = 4'hF;
+            4'b1111: decode_key = 4'hD;
+
+            default: decode_key = 4'h0;
+        endcase
+    end
+endfunction
+
+// --------------------------------------------------------
+// Scanner / debounce FSM
+// --------------------------------------------------------
+always_ff @(posedge clk) begin
+    if (!reset_n) begin
+        state                &lt;= SCAN;
+        col_idx              &lt;= 2'd0;
+        key_code             &lt;= 4'h0;
+        key_valid            &lt;= 1'b0;
+        release_sweep_active &lt;= 1'b0;
+        release_sweep_any    &lt;= 1'b0;
+    end
+    else begin
+        // key_valid is a one-clock pulse
+        key_valid &lt;= 1'b0;
+
+        if (scan_tick) begin
+
+            case (state)
+
+                // ----------------------------------------
+                // Normal scanning
+                // ----------------------------------------
+                SCAN: begin
+                    if (row_sync2 != 4'b1111) begin
+
+                        // If multiple rows are active,
+                        // choose the first one by priority.
+                        if (!row_sync2[0])
+                            key_code &lt;= decode_key(col_idx, 2'd0);
+                        else if (!row_sync2[1])
+                            key_code &lt;= decode_key(col_idx, 2'd1);
+                        else if (!row_sync2[2])
+                            key_code &lt;= decode_key(col_idx, 2'd2);
+                        else
+                            key_code &lt;= decode_key(col_idx, 2'd3);
+
+                        key_valid &lt;= 1'b1;
+                        state     &lt;= WAIT_RELEASE;
+
+                        // Do not accept a partial sweep as
+                        // evidence of full release.
+                        release_sweep_active &lt;= 1'b0;
+                        release_sweep_any    &lt;= 1'b0;
+                    end
+
+                    col_idx &lt;= col_idx + 2'd1;
+                end
+
+                // ----------------------------------------
+                // Ignore all keys until a COMPLETE sweep
+                // sees every row inactive.
+                // ----------------------------------------
+                WAIT_RELEASE: begin
+
+                    // Start release checking at column 0 so
+                    // the release decision always represents
+                    // a full four-column sweep.
+                    if (col_idx == 2'd0) begin
+                        release_sweep_active &lt;= 1'b1;
+                        release_sweep_any    &lt;=
+                            (row_sync2 != 4'b1111);
+                    end
+                    else if (release_sweep_active) begin
+                        if (row_sync2 != 4'b1111)
+                            release_sweep_any &lt;= 1'b1;
+                    end
+
+                    // Column 3 finishes a complete sweep.
+                    if ((col_idx == 2'd3) &amp;&amp;
+                        release_sweep_active) begin
+
+                        // Include column 3 in the decision.
+                        if (!release_sweep_any &amp;&amp;
+                            (row_sync2 == 4'b1111)) begin
+                            state &lt;= SCAN;
+                        end
+
+                        release_sweep_active &lt;= 1'b0;
+                        release_sweep_any    &lt;= 1'b0;
+                    end
+
+                    col_idx &lt;= col_idx + 2'd1;
+                end
+
+                default: begin
+                    state &lt;= SCAN;
+                end
+
+            endcase
+        end
+    end
+end</code></pre>
+<p>endmodule</p>
+<p>// ============================================================ // Hex-to-seven-segment decoder // // Active-low segment outputs for a common-anode display. // seg_n = {a,b,c,d,e,f,g} // ============================================================ module hex7seg ( input logic [3:0] hex, output logic [6:0] seg_n );</p>
+<pre><code>always_comb begin
+    case (hex)
+        4'h0: seg_n = 7'b0000001;
+        4'h1: seg_n = 7'b1001111;
+        4'h2: seg_n = 7'b0010010;
+        4'h3: seg_n = 7'b0000110;
+        4'h4: seg_n = 7'b1001100;
+        4'h5: seg_n = 7'b0100100;
+        4'h6: seg_n = 7'b0100000;
+        4'h7: seg_n = 7'b0001111;
+        4'h8: seg_n = 7'b0000000;
+        4'h9: seg_n = 7'b0000100;
+        4'hA: seg_n = 7'b0001000;
+        4'hB: seg_n = 7'b1100000;
+        4'hC: seg_n = 7'b0110001;
+        4'hD: seg_n = 7'b1000010;
+        4'hE: seg_n = 7'b0110000;
+        4'hF: seg_n = 7'b0111000;
+        default: seg_n = 7'b1111111;
+    endcase
+end</code></pre>
+<p>endmodule</p>
+<p>// ============================================================ // Dual seven-segment display multiplexer // // digit_n[0] = right / most-recent digit // digit_n[1] = left / older digit // // Active-low digit enables assumed. // // Each digit is active for exactly one refresh interval, giving // a 50% duty cycle and balanced brightness. // ============================================================ module dual7seg_mux ( input logic clk, input logic reset_n, input logic refresh_tick,</p>
+<pre><code>input  logic [3:0] older_digit,
+input  logic [3:0] recent_digit,
+
+output logic [6:0] seg_n,
+output logic [1:0] digit_n</code></pre>
+<p>);</p>
+<pre><code>logic digit_sel;
+logic [3:0] selected_hex;
+
+always_ff @(posedge clk) begin
+    if (!reset_n)
+        digit_sel &lt;= 1'b0;
+    else if (refresh_tick)
+        digit_sel &lt;= ~digit_sel;
+end
+
+// Right digit = most recent
+// Left digit  = older
+always_comb begin
+    if (digit_sel == 1'b0) begin
+        selected_hex = recent_digit;
+        digit_n      = 2'b10;
+    end
+    else begin
+        selected_hex = older_digit;
+        digit_n      = 2'b01;
+    end
+end
+
+hex7seg decoder (
+    .hex   (selected_hex),
+    .seg_n (seg_n)
+);</code></pre>
+<p>endmodule</p>
+<p>// ============================================================ // Top level // // Uses the iCE40 high-frequency internal oscillator. // // CLKHF_DIV = “0b01” is commonly used to divide the native // HFOSC frequency. Adjust CLK_HZ below to match the oscillator // frequency used in the actual design / board configuration. // ============================================================ module keypad_display_top ( input logic reset_n,</p>
+<pre><code>input  logic [3:0] keypad_row_n,
+output logic [3:0] keypad_col_n,
+
+output logic [6:0] seg_n,
+output logic [1:0] digit_n</code></pre>
+<p>);</p>
+<pre><code>// Approximate system-clock rate assumed by the tick dividers.
+localparam integer CLK_HZ = 24_000_000;
+
+logic clk;
+
+logic scan_tick;
+logic refresh_tick;
+
+logic       key_valid;
+logic [3:0] key_code;
+
+logic [3:0] older_digit;
+logic [3:0] recent_digit;
+
+// --------------------------------------------------------
+// iCE40 UP5K internal high-frequency oscillator
+// --------------------------------------------------------
+HSOSC #(
+    .CLKHF_DIV(2'b01)
+) hfosc_inst (
+    .CLKHFPU(1'b1),
+    .CLKHFEN(1'b1),
+    .CLKHF  (clk)
+);
+
+// --------------------------------------------------------
+// Keypad scan rate
+//
+// 200 column samples / second:
+//     5 ms per column
+//     20 ms per complete keypad sweep
+// --------------------------------------------------------
+rate_tick #(
+    .CLK_HZ (CLK_HZ),
+    .TICK_HZ(200)
+) scan_rate (
+    .clk     (clk),
+    .reset_n (reset_n),
+    .tick    (scan_tick)
+);
+
+// --------------------------------------------------------
+// Display refresh
+//
+// Toggle digit at 1 kHz.
+// Each individual digit is therefore refreshed at 500 Hz,
+// comfortably above the visible-flicker range.
+// --------------------------------------------------------
+rate_tick #(
+    .CLK_HZ (CLK_HZ),
+    .TICK_HZ(1000)
+) display_rate (
+    .clk     (clk),
+    .reset_n (reset_n),
+    .tick    (refresh_tick)
+);
+
+// --------------------------------------------------------
+// Keypad scanner
+// --------------------------------------------------------
+keypad_scanner_4x4 keypad_scanner (
+    .clk       (clk),
+    .reset_n   (reset_n),
+    .scan_tick (scan_tick),
+
+    .row_n     (keypad_row_n),
+    .col_n     (keypad_col_n),
+
+    .key_valid (key_valid),
+    .key_code  (key_code)
+);
+
+// --------------------------------------------------------
+// Two-key history
+//
+// Example:
+//   first press 5 -&gt; [0][5]
+//   next press A  -&gt; [5][A]
+// --------------------------------------------------------
+always_ff @(posedge clk) begin
+    if (!reset_n) begin
+        older_digit  &lt;= 4'h0;
+        recent_digit &lt;= 4'h0;
+    end
+    else if (key_valid) begin
+        older_digit  &lt;= recent_digit;
+        recent_digit &lt;= key_code;
+    end
+end
+
+// --------------------------------------------------------
+// Seven-segment multiplexer
+// --------------------------------------------------------
+dual7seg_mux display_mux (
+    .clk          (clk),
+    .reset_n      (reset_n),
+    .refresh_tick (refresh_tick),
+
+    .older_digit  (older_digit),
+    .recent_digit (recent_digit),
+
+    .seg_n        (seg_n),
+    .digit_n      (digit_n)
+);</code></pre>
+endmodule
+</details>
+</section>
+<section id="time-spent" class="level2">
+<h2 class="anchored" data-anchor-id="time-spent">Time Spent</h2>
+<p>Total time spent on Lab 3: <strong>25 hours</strong></p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
