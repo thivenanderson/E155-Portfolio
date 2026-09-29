@@ -13,15 +13,18 @@ draft: false
 
 Lab 4 uses the STM32L432KC microcontroller to generate music as a sequence of square waves. Each note is represented by a pitch in Hz and a duration in ms. TIM6 controls the square-wave pitch by determining when the speaker GPIO toggles, while TIM7 independently controls how long each note or rest is played. A frequency of 0 is treated as a rest and the final `{0, 0}` entry marks the end of the song.
 
-The implementation uses a custom timer library built from memory-mapped register definitions rather than CMSIS timer headers. The provided Für Elise note array is used for the required song, and an additional Tokyo Drift note array was added as an extra composition.
+The implementation uses a custom timer library built from memory-mapped register definitions rather than CMSIS timer headers as specified by the lab. The provided Für Elise note array is used for the required song, and an additional 15 secon note array for the tune of the song Tokyo Drift was added as an extra composition.
 
-The complete source code is available in the [Lab 4 GitHub repository](https://github.com/thivenanderson/E155-Lab4). The design was developed to satisfy the current [Lab 4 specifications](https://hmc-e155.github.io/lab/lab4/specs.html).
+The complete source code is available in the [Lab 4 GitHub repository](https://github.com/thivenanderson/E155-Lab4). 
+The design was developed to satisfy the current [Lab 4 specifications](https://hmc-e155.github.io/lab/lab4/specs.html).
+
+[STM32L432KC Reference Manual](https://hmc-e155.github.io/assets/doc/rm0394-stm32l41xxx42xxx43xxx44xxx45xxx46xxx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf)
 
 ## Hardware
 
 The MCU produces a square-wave audio signal on PB7. This signal is intended to drive an LM386 audio amplifier before reaching the 8 $\Omega$ speaker rather than driving the speaker directly from the GPIO.
 
-Before connecting the speaker, the PB7 output was checked on an oscilloscope using a 440 Hz test note. The initial implementation assumed an exact 80 MHz timer clock and consistently measured approximately 436--436.25 Hz. Because the measured frequency was consistently about 0.9% low, the effective timer clock was estimated from the measurement and the software timing constants were calibrated accordingly.
+Before connecting the speaker, the PB7 output was checked on an oscilloscope using a 440 Hz test note. The initial implementation assumed an exact 80 MHz timer clock and consistently measured approximately 436--436.25 Hz. A frequency of 991 Hz was also measured with 1000 Hz which should me more accurate as ARR should be an exact integer for that note with my 10KHz clock. Because the measured frequency was consistently about 0.9% low, the effective timer clock was estimated from the measurement and the software timing constants were calibrated accordingly.
 
 [TODO: add completed hardware photo and document the final amplifier/volume-control implementation.]
 
@@ -38,7 +41,7 @@ f_{CNT6} \approx 2(436.1)(1136)
 \approx 991\text{ kHz}.
 $$
 
-Multiplying by the prescaler division factor of 80 gives an effective timer input clock of approximately
+This was confirmed by the oscilloscope reading for a 1 kHz note. Multiplying by the prescaler division factor of 80 gives an effective timer input clock of approximately
 
 $$
 f_{TIM} \approx 991\text{ kHz}\times80
@@ -180,6 +183,14 @@ $$
 
 or approximately **0.101% error**. Both are within the required 1% accuracy.
 
+### Für Elise Note Accuracy
+
+Checking only 220 Hz and 1000 Hz is not sufficient to prove that every Für Elise note is within 1%. ARR is restricted to integer values, so integer calculation error changes with target frequency rather than remaining constant. In addition, the provided song includes a 1319 Hz note, which lies above the 1000 Hz test point.
+
+Every distinct nonzero pitch in the provided Für Elise array therefore needs to be checked using the actual integer ARR calculation. Using the calibrated 991 kHz TIM6 counter, the calculated worst-case error among the Für Elise pitches is approximately **0.177% at 1319 Hz**, which remains below the 1% requirement.
+
+[Note Accuracy Spreadsheet](images/Note_Accuracy_Sheet.pdf)
+
 ### Duration Calculation
 
 TIM7 runs at 9910 counts/s. For a requested duration in milliseconds,
@@ -221,7 +232,7 @@ f_{max}=\frac{991000}{2}
 =495.5\text{ kHz}.
 $$
 
-The upper value is the mathematical limit of the timer configuration. The implemented design polls the update flag and toggles the GPIO in software, so CPU/software overhead makes the practical software-generated maximum lower than the timer-only limit. The required audio frequencies are far below this limit.
+The upper value is the mathematical limit of the timer configuration. The required audio frequencies are far below this limit.
 
 ### Supported Duration Range
 
@@ -241,19 +252,12 @@ $$
 
 The current note format specifies duration as an integer number of milliseconds and reserves a duration of 0 as the song terminator. Therefore the smallest nonzero duration that can currently be requested by the application interface is 1 ms, even though the timer itself has finer resolution.
 
-### Für Elise Note Accuracy
-
-Checking only 220 Hz and 1000 Hz is not sufficient to prove that every Für Elise note is within 1%. ARR is restricted to integer values, so quantization error changes with target frequency rather than remaining constant. In addition, the provided song includes a 1319 Hz note, which lies above the 1000 Hz test point.
-
-Every distinct nonzero pitch in the provided Für Elise array therefore needs to be checked using the actual integer ARR calculation. Using the calibrated 991 kHz TIM6 counter, the calculated worst-case error among the Für Elise pitches is approximately **0.177% at 1319 Hz**, which remains below the 1% requirement.
-
-[TODO: link the final Für Elise note-accuracy spreadsheet here.]
 
 ## Schematic
 
-The schematic should show only the off-board audio circuit: the MCU output connection, LM386 amplifier, speaker, power/ground connections, and any external volume-control components used in the final hardware. Components already present on the development board are not duplicated.
+The schematic shows only the off-board audio circuit: the MCU output connection, LM386 amplifier, speaker, power/ground connections, and any external volume-control components used in the final hardware. Components already present on the development board are not duplicated.
 
-[TODO: insert final Lab 4 schematic. Include all pin names/numbers, component part numbers and values, author/title/date, and the final potentiometer if used.]
+![Lab 4 schematic](images/lab4_schematic.jpg){width=50%}
 
 ## Requirements Verification
 
@@ -261,12 +265,12 @@ The timer driver uses manually defined memory-mapped register structures and bas
 
 The code explicitly separates rests from normal notes, so a zero-frequency rest never enters the frequency division calculation. The `{0, 0}` terminator is excluded from the playback loop.
 
-The provided Für Elise pitches are mathematically reproducible to within 1% using the calibrated timer clock. The code also contains a Tokyo Drift note sequence as the additional composition.
+The provided Für Elise pitches are mathematically reproducible to within 1% using the calibrated timer clock. \
 
-[TODO: after final hardware checkoff, state whether Für Elise tempo/rests, LM386 speaker output, potentiometer, and extra composition were demonstrated successfully. List any shortcomings if applicable.]
+The speaker successfully played both Für Elise and the additional composition.
 
 ## AI Prototype and Reflection
 
 ## Time Spent
 
-Total time spent on Lab 4: **[TODO]**
+Total time spent on Lab 4: **15**
