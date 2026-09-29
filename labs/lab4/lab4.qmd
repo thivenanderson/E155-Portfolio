@@ -26,7 +26,7 @@ The MCU produces a square-wave audio signal on PB7. This signal is intended to d
 
 Before connecting the speaker, the PB7 output was checked on an oscilloscope using a 440 Hz test note. The initial implementation assumed an exact 80 MHz timer clock and consistently measured approximately 436--436.25 Hz. A frequency of 991 Hz was also measured with 1000 Hz which should me more accurate as ARR should be an exact integer for that note with my 10KHz clock. Because the measured frequency was consistently about 0.9% low, the effective timer clock was estimated from the measurement and the software timing constants were calibrated accordingly.
 
-[TODO: add completed hardware photo and document the final amplifier/volume-control implementation.]
+![Completed Lab 4 speaker hardware.](images/lab4_hardware.jpeg){width=50%}
 
 ### Oscilloscope Verification
 
