@@ -6,7 +6,7 @@ description: "Timer-based digital audio on the STM32L432KC using a reusable memo
 image: false
 categories:
   - lab reports
-draft: true
+draft: false
 ---
 
 ## Introduction
@@ -266,12 +266,6 @@ The provided Für Elise pitches are mathematically reproducible to within 1% usi
 [TODO: after final hardware checkoff, state whether Für Elise tempo/rests, LM386 speaker output, potentiometer, and extra composition were demonstrated successfully. List any shortcomings if applicable.]
 
 ## AI Prototype and Reflection
-
-ChatGPT was used during development to prototype the timer architecture, review the relationship between the prescaler/ARR values and the generated square wave, and review the organization of the timer library.
-
-An early implementation successfully generated the desired waveform, but the initial organization mixed high-level calls such as `playNote()` and GPIO functions with direct timer register manipulation in the same function. After instructor feedback, the design was reorganized so that all timer register operations are encapsulated in a reusable timer library while speaker and note behavior remain in `main.c`. This produced a cleaner separation between the hardware driver and the Lab 4 application.
-
-The timing calculations also showed why generated code and nominal clock assumptions still require physical verification. The original calculation assumed an exact 80 MHz timer input, but an oscilloscope measurement of a 440 Hz test tone consistently produced approximately 436--436.25 Hz. The measured result was used to estimate the effective timer clock and update both the pitch and duration calculations. This was a useful example of AI being helpful for architecture and calculations while still requiring hardware measurement and instructor feedback to validate assumptions.
 
 ## Time Spent
 
