@@ -13,7 +13,7 @@ draft: false
 
 Lab 4 uses the STM32L432KC microcontroller to generate music as a sequence of square waves. Each note is represented by a pitch in Hz and a duration in ms. TIM6 controls the square-wave pitch by determining when the speaker GPIO toggles, while TIM7 independently controls how long each note or rest is played. A frequency of 0 is treated as a rest and the final `{0, 0}` entry marks the end of the song.
 
-The implementation uses a custom timer library built from memory-mapped register definitions rather than CMSIS timer headers as specified by the lab. The provided Für Elise note array is used for the required song, and an additional 15 secon note array for the tune of the song Tokyo Drift was added as an extra composition.
+The implementation uses a custom timer library built from memory-mapped register definitions rather than CMSIS timer headers as specified by the lab. The provided Für Elise note array is used for the required song, and an additional compositions are supported.
 
 The complete source code is available in the [Lab 4 GitHub repository](https://github.com/thivenanderson/E155-Lab4). 
 The design was developed to satisfy the current [Lab 4 specifications](https://hmc-e155.github.io/lab/lab4/specs.html).
@@ -270,6 +270,14 @@ The provided Für Elise pitches are mathematically reproducible to within 1% usi
 The speaker successfully played both Für Elise and the additional composition.
 
 ## AI Prototype and Reflection
+This week I used Claude Sonnet 5.5 to complete the AI overview. After the initial prompt the agent produced logically sound architecture
+similar to my work, except for a few key differences. The agent elected to use TIM2 as it has a PWM output and a 32-bit register for ARR. With thism
+methodology only one timer peripheral is required, and ARR has a large enough range that PSC can be set to 0. It noted for easier calculations
+a PSC value of 79 would be suitable to form a 1MHz clock which was the same as my reasoning. The agent performed calculations with a 80 MHz clock, but later in
+the response it acknowledged for this specific microcontroller this would need to be configures in PLL. The response was unchanged when provided
+the data sheet.
+
+![AI Prototype Summary](images/Ai_prototype.png){width=50%}
 
 ## Time Spent
 
