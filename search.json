@@ -18,7 +18,70 @@
     "href": "labs.html",
     "title": "E155 Labs",
     "section": "",
-    "text": "Lab 3: Keypad Scanner\n\n\nSynchronous keypad scanning, debouncing, multi-key handling, and two-digit display.\n\n\n\n\n\nSep 22, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 2: Multiplexed 7-Segment Display and Keypad Scanner\n\n\nTime-multiplexed dual 7-segment display, reusable counters, and keypad scanning.\n\n\n\n\n\nSep 15, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 1: FPGA and MCU Setup and Testing\n\n\nFPGA setup, combinational logic, 7-segment decoding, and sequential logic.\n\n\n\n\n\nSep 8, 2026\n\n\nThiven Anderson\n\n\n\n\n\nNo matching items"
+    "text": "Lab 4: Digital Audio\n\n\nTimer-based digital audio on the STM32L432KC using a reusable memory-mapped timer library.\n\n\n\n\n\nSep 29, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 3: Keypad Scanner\n\n\nSynchronous keypad scanning, debouncing, multi-key handling, and two-digit display.\n\n\n\n\n\nSep 22, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 2: Multiplexed 7-Segment Display and Keypad Scanner\n\n\nTime-multiplexed dual 7-segment display, reusable counters, and keypad scanning.\n\n\n\n\n\nSep 15, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 1: FPGA and MCU Setup and Testing\n\n\nFPGA setup, combinational logic, 7-segment decoding, and sequential logic.\n\n\n\n\n\nSep 8, 2026\n\n\nThiven Anderson\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "labs/lab4/lab4.html",
+    "href": "labs/lab4/lab4.html",
+    "title": "Lab 4: Digital Audio",
+    "section": "",
+    "text": "Lab 4 uses the STM32L432KC microcontroller to generate music as a sequence of square waves. Each note is represented by a pitch in Hz and a duration in ms. TIM6 controls the square-wave pitch by determining when the speaker GPIO toggles, while TIM7 independently controls how long each note or rest is played. A frequency of 0 is treated as a rest and the final {0, 0} entry marks the end of the song.\nThe implementation uses a custom timer library built from memory-mapped register definitions rather than CMSIS timer headers as specified by the lab. The provided Für Elise note array is used for the required song, and an additional compositions are supported.\nThe complete source code is available in the Lab 4 GitHub repository. The design was developed to satisfy the current Lab 4 specifications.\nSTM32L432KC Reference Manual"
+  },
+  {
+    "objectID": "labs/lab4/lab4.html#introduction",
+    "href": "labs/lab4/lab4.html#introduction",
+    "title": "Lab 4: Digital Audio",
+    "section": "",
+    "text": "Lab 4 uses the STM32L432KC microcontroller to generate music as a sequence of square waves. Each note is represented by a pitch in Hz and a duration in ms. TIM6 controls the square-wave pitch by determining when the speaker GPIO toggles, while TIM7 independently controls how long each note or rest is played. A frequency of 0 is treated as a rest and the final {0, 0} entry marks the end of the song.\nThe implementation uses a custom timer library built from memory-mapped register definitions rather than CMSIS timer headers as specified by the lab. The provided Für Elise note array is used for the required song, and an additional compositions are supported.\nThe complete source code is available in the Lab 4 GitHub repository. The design was developed to satisfy the current Lab 4 specifications.\nSTM32L432KC Reference Manual"
+  },
+  {
+    "objectID": "labs/lab4/lab4.html#hardware",
+    "href": "labs/lab4/lab4.html#hardware",
+    "title": "Lab 4: Digital Audio",
+    "section": "Hardware",
+    "text": "Hardware\nThe MCU produces a square-wave audio signal on PB7. This signal is intended to drive an LM386 audio amplifier before reaching the 8 \\(\\Omega\\) speaker rather than driving the speaker directly from the GPIO.\nBefore connecting the speaker, the PB7 output was checked on an oscilloscope using a 440 Hz test note. The initial implementation assumed an exact 80 MHz timer clock and consistently measured approximately 436–436.25 Hz. A frequency of 991 Hz was also measured with 1000 Hz which should me more accurate as ARR should be an exact integer for that note with my 10KHz clock. Because the measured frequency was consistently about 0.9% low, the effective timer clock was estimated from the measurement and the software timing constants were calibrated accordingly.\n\n\n\nCompleted Lab 4 speaker hardware.\n\n\n\nOscilloscope Verification\nThe initial 440 Hz test used a TIM6 prescaler of 79. With an ARR value of 1135, the measured output of approximately 436.1 Hz implies a TIM6 counter frequency of approximately\n\\[\nf_{CNT6} = 2f_{measured}(ARR+1)\n\\]\n\\[\nf_{CNT6} \\approx 2(436.1)(1136)\n\\approx 991\\text{ kHz}.\n\\]\nThis was confirmed by the oscilloscope reading for a 1 kHz note. Multiplying by the prescaler division factor of 80 gives an effective timer input clock of approximately\n\\[\nf_{TIM} \\approx 991\\text{ kHz}\\times80\n=79.28\\text{ MHz}.\n\\]\nThis measured value is used in the final timer calculations rather than assuming an exact 80 MHz clock.\n[TODO: add final oscilloscope screenshot(s), including a calibrated test frequency and note duration.]"
+  },
+  {
+    "objectID": "labs/lab4/lab4.html#software-and-microcontroller-design",
+    "href": "labs/lab4/lab4.html#software-and-microcontroller-design",
+    "title": "Lab 4: Digital Audio",
+    "section": "Software and Microcontroller Design",
+    "text": "Software and Microcontroller Design\n\nTimer Library\nTIM6 and TIM7 are accessed through a custom TIMx_TypeDef register structure and manually defined base addresses. The timer library contains generic functions for timer initialization and basic timer operations rather than application-specific audio functions.\nThe same initTIM() function initializes either TIM6 or TIM7 using a timer pointer and prescaler value. Raw register bit manipulation is contained inside the timer library through functions such as startTIM(), stopTIM(), resetTIM(), setTIMARR(), timerDone(), and clearTIMFlag(). This keeps the library reusable and prevents the application code from mixing high-level audio behavior with low-level register operations.\n\n\nTimer library interface\n\nvoid initTIM(TIMx_TypeDef *TIMx, uint16_t prescaler);\nvoid startTIM(TIMx_TypeDef *TIMx);\nvoid stopTIM(TIMx_TypeDef *TIMx);\nvoid resetTIM(TIMx_TypeDef *TIMx);\nvoid setTIMARR(TIMx_TypeDef *TIMx, uint16_t arr);\nint timerDone(TIMx_TypeDef *TIMx);\nvoid clearTIMFlag(TIMx_TypeDef *TIMx);\n\n\n\nAudio Control\nApplication-specific audio behavior is kept in main.c. The speaker pin, calibrated timer clock, timer prescalers, pitch conversion, duration conversion, and playNote() function are all defined at the application level.\nTIM6 is configured with a prescaler of 79, giving a calibrated counter frequency of\n\\[\nf_{CNT6}=\\frac{79.28\\text{ MHz}}{79+1}\n=991000\\text{ Hz}.\n\\]\nTIM7 is configured with a prescaler of 7999, giving\n\\[\nf_{CNT7}=\\frac{79.28\\text{ MHz}}{7999+1}\n=9910\\text{ Hz}.\n\\]\nFor a normal note, TIM6 runs continuously while TIM7 measures the total note duration. Each TIM6 update event toggles PB7 and clears the update flag. When TIM7 reaches its update event, both timers are stopped and PB7 is forced low.\nA rest follows the same TIM7 duration timing but leaves TIM6 stopped and holds the speaker output low. This also prevents the pitch calculation from ever being called with a frequency of zero, avoiding division by zero.\n\n\nAudio timing functions\n\nint frequencyToARR(int frequency) {\n    return (TIM6_COUNT_HZ/(2*frequency)) - 1;\n}\n\nint durationToARR(int duration_ms) {\n    return ((duration_ms*TIM7_COUNT_HZ)/1000) - 1;\n}"
+  },
+  {
+    "objectID": "labs/lab4/lab4.html#design-calculations",
+    "href": "labs/lab4/lab4.html#design-calculations",
+    "title": "Lab 4: Digital Audio",
+    "section": "Design Calculations",
+    "text": "Design Calculations\n\nPitch Calculation\nTIM6 generates one GPIO transition per timer overflow. A complete square-wave period requires two transitions, so the generated pitch is\n\\[\nf_{note}=\\frac{f_{CNT6}}{2(ARR+1)}.\n\\]\nSolving for ARR gives\n\\[\nARR=\\frac{f_{CNT6}}{2f_{note}}-1.\n\\]\nBecause ARR must be an integer, the implementation uses integer arithmetic. As one example, for a requested 440 Hz pitch,\n\\[\nARR=\\left\\lfloor\\frac{991000}{2(440)}\\right\\rfloor-1\n=1125.\n\\]\nThe corresponding generated frequency is\n\\[\nf_{actual}=\\frac{991000}{2(1125+1)}\n\\approx440.053\\text{ Hz},\n\\]\nwhich has an error of approximately\n\\[\n\\frac{|440.053-440|}{440}\\times100\n\\approx0.012\\%.\n\\]\n\n\nRequired 220 Hz and 1000 Hz Checks\nFor 220 Hz,\n\\[\nARR=\\left\\lfloor\\frac{991000}{2(220)}\\right\\rfloor-1\n=2251,\n\\]\ngiving\n\\[\nf_{actual}=\\frac{991000}{2(2251+1)}\n\\approx220.027\\text{ Hz},\n\\]\nor approximately 0.012% error.\nFor 1000 Hz,\n\\[\nARR=\\left\\lfloor\\frac{991000}{2(1000)}\\right\\rfloor-1\n=494,\n\\]\ngiving\n\\[\nf_{actual}=\\frac{991000}{2(494+1)}\n\\approx1001.01\\text{ Hz},\n\\]\nor approximately 0.101% error. Both are within the required 1% accuracy.\n\n\nFür Elise Note Accuracy\nChecking only 220 Hz and 1000 Hz is not sufficient to prove that every Für Elise note is within 1%. ARR is restricted to integer values, so integer calculation error changes with target frequency rather than remaining constant. In addition, the provided song includes a 1319 Hz note, which lies above the 1000 Hz test point.\nEvery distinct nonzero pitch in the provided Für Elise array therefore needs to be checked using the actual integer ARR calculation. Using the calibrated 991 kHz TIM6 counter, the calculated worst-case error among the Für Elise pitches is approximately 0.177% at 1319 Hz, which remains below the 1% requirement.\nNote Accuracy Spreadsheet\n\n\nDuration Calculation\nTIM7 runs at 9910 counts/s. For a requested duration in milliseconds,\n\\[\nARR=\\left\\lfloor\\frac{t_{ms}(9910)}{1000}\\right\\rfloor-1.\n\\]\nFor example, a 250 ms note uses\n\\[\nARR=\\left\\lfloor\\frac{250(9910)}{1000}\\right\\rfloor-1\n=2476.\n\\]\nThe resulting duration is\n\\[\nt_{actual}=\\frac{2476+1}{9910}\n\\approx0.24995\\text{ s}\n=249.95\\text{ ms}.\n\\]\nThis differs from 250 ms by approximately 0.020%.\n\n\nSupported Frequency Range\nTIM6 is a 16-bit timer, so ARR can range from 0 to 65535 with the selected prescaler. The minimum timer-generated square-wave frequency occurs at ARR = 65535:\n\\[\nf_{min}=\\frac{991000}{2(65535+1)}\n\\approx7.56\\text{ Hz}.\n\\]\nThe theoretical maximum occurs at ARR = 0:\n\\[\nf_{max}=\\frac{991000}{2}\n=495.5\\text{ kHz}.\n\\]\nThe upper value is the mathematical limit of the timer configuration. The required audio frequencies are far below this limit.\n\n\nSupported Duration Range\nTIM7 is also a 16-bit timer. One TIM7 count lasts\n\\[\nT_{tick}=\\frac{1}{9910}\n\\approx0.1009\\text{ ms}.\n\\]\nTherefore the minimum timer overflow period is approximately 0.1009 ms, while the maximum single-overflow duration is\n\\[\nt_{max}=\\frac{65536}{9910}\n\\approx6.613\\text{ s}.\n\\]\nThe current note format specifies duration as an integer number of milliseconds and reserves a duration of 0 as the song terminator. Therefore the smallest nonzero duration that can currently be requested by the application interface is 1 ms, even though the timer itself has finer resolution."
+  },
+  {
+    "objectID": "labs/lab4/lab4.html#schematic",
+    "href": "labs/lab4/lab4.html#schematic",
+    "title": "Lab 4: Digital Audio",
+    "section": "Schematic",
+    "text": "Schematic\nThe schematic shows only the off-board audio circuit: the MCU output connection, LM386 amplifier, speaker, power/ground connections, and any external volume-control components used in the final hardware. Components already present on the development board are not duplicated.\n\n\n\nLab 4 schematic"
+  },
+  {
+    "objectID": "labs/lab4/lab4.html#requirements-verification",
+    "href": "labs/lab4/lab4.html#requirements-verification",
+    "title": "Lab 4: Digital Audio",
+    "section": "Requirements Verification",
+    "text": "Requirements Verification\nThe timer driver uses manually defined memory-mapped register structures and base addresses, and the application uses TIM6 and TIM7 for pitch and duration generation. The note and duration calculations above demonstrate the relationship between the timer configuration and generated audio and show that 220 Hz and 1000 Hz can be generated within 1%.\nThe code explicitly separates rests from normal notes, so a zero-frequency rest never enters the frequency division calculation. The {0, 0} terminator is excluded from the playback loop.\nThe provided Für Elise pitches are mathematically reproducible to within 1% using the calibrated timer clock.\n\nThe speaker successfully played both Für Elise and the additional composition."
+  },
+  {
+    "objectID": "labs/lab4/lab4.html#ai-prototype-and-reflection",
+    "href": "labs/lab4/lab4.html#ai-prototype-and-reflection",
+    "title": "Lab 4: Digital Audio",
+    "section": "AI Prototype and Reflection",
+    "text": "AI Prototype and Reflection\nThis week I used Claude Sonnet 5.5 to complete the AI overview. After the initial prompt the agent produced logically sound architecture similar to my work, except for a few key differences. The agent elected to use TIM2 as it has a PWM output and a 32-bit register for ARR. With thism methodology only one timer peripheral is required, and ARR has a large enough range that PSC can be set to 0. It noted for easier calculations a PSC value of 79 would be suitable to form a 1MHz clock which was the same as my reasoning. The agent performed calculations with a 80 MHz clock, but later in the response it acknowledged for this specific microcontroller this would need to be configures in PLL. The response was unchanged when provided the data sheet.\n\n\n\nAI Prototype Summary"
+  },
+  {
+    "objectID": "labs/lab4/lab4.html#time-spent",
+    "href": "labs/lab4/lab4.html#time-spent",
+    "title": "Lab 4: Digital Audio",
+    "section": "Time Spent",
+    "text": "Time Spent\nTotal time spent on Lab 4: 15"
   },
   {
     "objectID": "labs/lab2/lab2.html",
