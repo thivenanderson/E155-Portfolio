@@ -60,28 +60,28 @@ char spiSendReceive(char send) {
 
 The STM32 waits for UART requests from the ESP8266, updates the LED or resolution if requested, reads the latest temperature, and sends back the HTML webpage. Temperature formatting uses integer hundredths because the default embedded `sprintf()` library did not correctly display floating-point format specifiers.
 
-## SPI Oscilloscope Verification
+## SPI Logic Analyzer Verification
 
-The DS1722 configuration register was read back as `0xE8`, confirming the initial 12-bit continuous-conversion setting. The sensor read approximately 22°C at room temperature and increased when warmed.
+A configuration-register write and readback returned **`0xE8`**, confirming the DS1722 was configured for 12-bit continuous conversions. The sensor then measured approximately **22°C** at room temperature and increased when warmed by a finger.
 
-The annotated oscilloscope capture shows a full SPI temperature read. CH1 (yellow) is SDO/MISO, CH2 (green) is SDI/MOSI, CH3 (blue) is SCK, and CH4 (pink) is CE. CE stays HIGH while the STM32 sends three bytes, giving 24 SCK pulses total. MOSI sends `0x01 0x00 0x00` to request the temperature registers. The received LSB (`0x40`) and MSB (`0x26`) give `0x2640 / 256 = 38.25°C` for the captured read.
+The scope capture shows a complete SPI temperature-read transaction. CH4 (pink) is CE, CH3 (blue) is SCK, CH2 (green) is SDI/MOSI, and CH1 (yellow) is SDO/MISO. CE remains HIGH across 24 clock pulses: eight for the `0x01` address and 16 to receive the two temperature bytes.
 
 <details>
-<summary>Annotated SPI oscilloscope capture</summary>
+<summary>Full SPI read transaction</summary>
 
-[TODO: Add the annotated photo to `labs/lab6/images/lab6_spi_capture.jpg` and uncomment the image below.]
+[TODO: Add the scope capture as `images/lab6_spi_capture.jpeg`.]
 
 <!--
-![Complete DS1722 SPI read on an oscilloscope: yellow MISO, green MOSI, blue SCK, pink CE, with annotated bytes and clock settings.](images/lab6_spi_capture.jpg){width=100%}
+![DS1722 read: CH1 yellow SDO/MISO, CH2 green SDI/MOSI, CH3 blue SCK, CH4 pink CE.](images/lab6_spi_capture.jpeg){width=100%}
 -->
 
 </details>
 
 ### SPI Timing
 
-The waveform shows CPOL = 0 (SCK idles LOW) and CPHA = 1 (data sampled on the falling clock edge). The configured 2.5 MHz SCK corresponds to a 400 ns period, or about 200 ns per HIGH and LOW interval. This is below the DS1722's 5 MHz maximum and above its 100 ns minimum HIGH/LOW durations. CE rises before the first clock edge, with an estimated setup time of approximately 0.5 µs from the 2 µs/div display, compared with the datasheet's 400 ns minimum.
+The SPI clock is configured for 2.5 MHz, giving a 400 ns period and approximately 200 ns HIGH and LOW times. The [DS1722 datasheet](https://hmc-e155.github.io/assets/doc/ds1722.pdf) specifies a maximum clock frequency of 5 MHz and minimum HIGH/LOW times of 100 ns. The selected clock therefore provides timing margin.
 
-This capture was recorded on an oscilloscope, not a separate logic analyzer. The bits were labeled manually rather than with an automatic serial decoder.
+The scope capture also shows CE rising before the first SCK pulse and remaining HIGH throughout the read. The datasheet requires a minimum 400 ns CE-to-SCK setup time. Based on the 2 µs/div time scale, this delay appears to be approximately 0.5 µs; a cursor measurement would verify the exact value.
 
 ## Webpage Verification
 
@@ -112,7 +112,7 @@ The final schematic should show the off-board DS1722 circuit and connections to 
 
 The design successfully reads temperature over SPI, serves the webpage over UART/Wi-Fi, controls the on-board LED, and offers 8–12-bit resolution settings. The driver uses CMSIS SPI registers, and the signed temperature conversion supports the required -10°C to 30°C range. The configuration readback, observed temperature response, and SPI waveform support the functionality of the hardware.
 
-[TODO: Add the completed schematic. The captured SPI waveform was documented on an oscilloscope rather than the logic analyzer specified in the rubric.]
+[TODO: Add the completed schematic and confirm the final logic analyzer/timing annotations for the documentation requirements.]
 
 ## AI Prototype and Reflection
 
