@@ -1,8 +1,112 @@
 ---
 title: "Lab 6: The Internet of Things and Serial Peripheral Interface"
 author: "Thiven Anderson"
-date: "9/8/26"
+date: "10/13/26"
+description: "SPI temperature sensing with an STM32L432KC and an ESP8266 web interface."
+image: false
 categories:
   - lab reports
-draft: true
+draft: false
 ---
+
+## Introduction
+
+Lab 6 uses an STM32L432KC to read a DS1722 temperature sensor over SPI and communicate with an ESP8266 over UART. The webpage displays temperature and LED status, lets the user toggle the LED, and provides 8–12-bit temperature resolution settings.
+
+The source code is available in the [Lab 6 GitHub repository](https://github.com/thivenanderson/E155-Lab6). The design follows the [Lab 6 specifications](https://hmc-e155.github.io/lab/lab6/specs.html).
+
+## Hardware
+
+The DS1722 uses SPI1 with PA5 (SCK), PA6 (MISO), PA7 (MOSI), and PA4 (CE). The ESP8266 communicates over USART1 at 125000 baud using PA9 (TX) and PA10 (RX), with TX and RX crossed between devices. The ESP8266 requires 3.3 V power. PB3 controls the on-board LED.
+
+[TODO: Confirm wiring, sensor pin numbers, and open FPGA DIP switches during hardware testing.]
+
+<!-- Add completed hardware photo:
+![Completed Lab 6 hardware.](images/lab6_hardware.jpeg){width=60%}
+-->
+
+## Software and Microcontroller Design
+
+The SPI driver uses the STM32 CMSIS register definitions to configure SPI1 as a master with 8-bit transfers, CPOL = 0, and CPHA = 1. It polls the transmit and receive flags to exchange one byte at a time.
+
+The DS1722 driver controls CE, configures continuous conversion, and reads the temperature's two bytes. They are combined into a signed 16-bit value and divided by 256 to obtain degrees Celsius, including negative temperatures.
+
+The STM32 receives webpage requests from the ESP8266 over UART and returns HTML containing the latest temperature and LED state. Resolution buttons send requests that update the DS1722 configuration register.
+
+<details>
+<summary>SPI transfer function</summary>
+
+```c
+char spiSendReceive(char send) {
+    while (!(SPI1->SR & SPI_SR_TXE));
+    *(__IO uint8_t *)&SPI1->DR = (uint8_t)send;
+
+    while (!(SPI1->SR & SPI_SR_RXNE));
+    return *(__IO uint8_t *)&SPI1->DR;
+}
+```
+
+</details>
+
+## SPI Logic Analyzer Verification
+
+[TODO: Capture a complete temperature read using CE, SCK, SDO, and SDI. Label the register address, received bytes, and relevant timing. For Excellence, compare clock and CE timing to the DS1722 datasheet.]
+
+<details>
+<summary>SPI temperature read capture</summary>
+
+[TODO: Insert the labeled logic analyzer screenshot.]
+
+<!--
+![Complete DS1722 SPI temperature read with labeled CE, SCK, SDO, and SDI.](images/lab6_spi_capture.png){width=100%}
+-->
+
+</details>
+
+<details>
+<summary>Webpage verification</summary>
+
+[TODO: Add a screenshot showing the live temperature, LED status, and resolution controls. Confirm that refreshing updates temperature and that controls work.]
+
+<!--
+![Lab 6 webpage showing temperature and controls.](images/lab6_webpage.png){width=75%}
+-->
+
+</details>
+
+## Schematic
+
+The schematic will show the off-board DS1722 and ESP8266 connections, labeled with component part numbers, physical pin numbers, signal names, power, and ground. The MCU and on-board LED are already shown in the [E155 development board schematic](https://hmc-e155.github.io/assets/doc/E155%20FA22%20Development%20Board%20Schematic.pdf) and will not be redrawn.
+
+[TODO: Add final schematic matching the actual wiring. Include component values, clear junctions, and a title block.]
+
+<!--
+![Lab 6 off-board circuit schematic.](images/lab6_schematic.png){width=85%}
+-->
+
+## Requirements Verification
+
+The firmware builds in SEGGER and includes the CMSIS SPI driver, signed temperature conversion, webpage LED controls, and 8–12-bit resolution selection. The signed reading format supports temperatures below zero, including the required −10°C to 30°C range.
+
+[TODO: State whether all proficiency and excellence requirements were met after hardware testing. List any shortcomings.]
+
+## AI Prototype and Reflection
+
+[TODO: Complete the AI prototype with a different LLM. Compare its generated temperature-control HTML webpage with its CMSIS DS1722 SPI function. Briefly discuss correctness, what worked in the project, and whether it performed better on HTML or embedded C.]
+
+<details>
+<summary>AI prototype results</summary>
+
+[TODO: Insert screenshots or selected code snippets from both prompts.]
+
+<!--
+![AI-generated webpage.](images/lab6_ai_webpage.png){width=75%}
+
+![AI-generated SPI function.](images/lab6_ai_spi.png){width=75%}
+-->
+
+</details>
+
+## Time Spent
+
+Total time spent on Lab 6: **[TODO: hours]**
