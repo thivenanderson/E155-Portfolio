@@ -100,7 +100,7 @@ The ESP8266 hosted the webpage over its Wi-Fi network. The page displayed the me
 
 ## Schematic
 
-The final schematic should show the off-board DS1722 circuit and connections to the MCU, including both 3.3 V supplies, SERMODE, ground, and the four SPI connections. The ESP8266 uses the development board's existing mikroBUS socket. Components already present on the development board are not redrawn; see the [E155 development board schematic](https://hmc-e155.github.io/lab/lab6/specs.html) linked by the lab specifications.
+The final schematic should show the off-board DS1722 circuit and connections to the MCU, including both 3.3 V supplies, SERMODE, ground, and the four SPI connections. The ESP8266 uses the development board's existing mikroBUS socket. Components already present on the development board are not redrawn; see the [E155 development board schematic](https://hmc-e155.github.io/assets/doc/E155%20FA22%20Development%20Board%20Schematic.pdf).
 
 [TODO: Insert final schematic, with component pin numbers, labels, and title block.]
 
