@@ -1,2 +1,918 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"></html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Thiven Anderson">
+<meta name="dcterms.date" content="2026-10-13">
+<meta name="description" content="SPI temperature sensing with an STM32L432KC and ESP8266 webpage.">
+
+<title>Lab 6: The Internet of Things and Serial Peripheral Interface – E155 Portfolio</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-172ba59bd5e0b52282274ba0c0cc16fc.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">E155 Portfolio</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../labs.html"> 
+<span class="menu-text">Labs</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../resources.html"> 
+<span class="menu-text">Resouces</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#hardware" id="toc-hardware" class="nav-link" data-scroll-target="#hardware">Hardware</a></li>
+  <li><a href="#software-and-microcontroller-design" id="toc-software-and-microcontroller-design" class="nav-link" data-scroll-target="#software-and-microcontroller-design">Software and Microcontroller Design</a></li>
+  <li><a href="#spi-oscilloscope-verification" id="toc-spi-oscilloscope-verification" class="nav-link" data-scroll-target="#spi-oscilloscope-verification">SPI Oscilloscope Verification</a>
+  <ul class="collapse">
+  <li><a href="#spi-timing" id="toc-spi-timing" class="nav-link" data-scroll-target="#spi-timing">SPI Timing</a></li>
+  </ul></li>
+  <li><a href="#webpage-verification" id="toc-webpage-verification" class="nav-link" data-scroll-target="#webpage-verification">Webpage Verification</a></li>
+  <li><a href="#schematic" id="toc-schematic" class="nav-link" data-scroll-target="#schematic">Schematic</a></li>
+  <li><a href="#requirements-verification" id="toc-requirements-verification" class="nav-link" data-scroll-target="#requirements-verification">Requirements Verification</a></li>
+  <li><a href="#ai-prototype-and-reflection" id="toc-ai-prototype-and-reflection" class="nav-link" data-scroll-target="#ai-prototype-and-reflection">AI Prototype and Reflection</a></li>
+  <li><a href="#time-spent" id="toc-time-spent" class="nav-link" data-scroll-target="#time-spent">Time Spent</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Lab 6: The Internet of Things and Serial Peripheral Interface</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">lab reports</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    SPI temperature sensing with an STM32L432KC and ESP8266 webpage.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Thiven Anderson </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">October 13, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Lab 6 uses the STM32L432KC to read a DS1722 temperature sensor over SPI and communicate with an ESP8266 over UART. The ESP8266 hosts a webpage that displays temperature and LED status, turns the LED on or off, and allows the user to select the temperature resolution.</p>
+<p>The code is available in the <a href="https://github.com/thivenanderson/E155-Lab6">Lab 6 GitHub repository</a>, and the design follows the <a href="https://hmc-e155.github.io/lab/lab6/specs.html">Lab 6 specifications</a>.</p>
+</section>
+<section id="hardware" class="level2">
+<h2 class="anchored" data-anchor-id="hardware">Hardware</h2>
+<p>The DS1722 is powered at 3.3 V, with SERMODE connected HIGH to select SPI. The ESP8266 Click module plugs into the development board’s mikroBUS socket and communicates with the STM32 through USART1 at 125000 baud. The FPGA DIP switches were opened to avoid conflicts with the MCU pins.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>DS1722 pin</th>
+<th>Signal</th>
+<th>Connection</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1, 8</td>
+<td>VDDD, VDDA</td>
+<td>3.3 V</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>CE</td>
+<td>PB0</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>SCLK</td>
+<td>PA5</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>GND</td>
+<td>GND</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>SDO</td>
+<td>PA6 (MISO)</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>SDI</td>
+<td>PB5 (MOSI)</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>SERMODE</td>
+<td>3.3 V</td>
+</tr>
+</tbody>
+</table>
+<p>The STM32’s on-board LED is controlled through PB3.</p>
+</section>
+<section id="software-and-microcontroller-design" class="level2">
+<h2 class="anchored" data-anchor-id="software-and-microcontroller-design">Software and Microcontroller Design</h2>
+<p>The SPI library uses the CMSIS register definitions to configure SPI1 as a master, with 8-bit data transfers. The selected settings are <code>initSPI(4, 0, 1)</code>: a divide-by-32 prescaler, idle-low clock, and sampling on the second clock edge (SPI Mode 1). With an 80 MHz SPI peripheral clock, the expected SPI clock is 2.5 MHz.</p>
+<p>The DS1722 driver uses PB0 to control CE. It writes to the configuration register to enable continuous conversions and set the resolution from 8 to 12 bits. The initial configuration is 12-bit. For a temperature read, it transmits address <code>0x01</code>, then reads the LSB and MSB in a three-byte burst. The bytes are combined as a signed 16-bit value and divided by 256 to obtain degrees Celsius. This also handles negative temperatures.</p>
+<details>
+<summary>
+SPI transfer function
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> spiSendReceive<span class="op">(</span><span class="dt">char</span> send<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!(</span>SPI1<span class="op">-&gt;</span>SR <span class="op">&amp;</span> SPI_SR_TXE<span class="op">));</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*(</span>__IO <span class="dt">uint8_t</span> <span class="op">*)&amp;</span>SPI1<span class="op">-&gt;</span>DR <span class="op">=</span> <span class="op">(</span><span class="dt">uint8_t</span><span class="op">)</span>send<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!(</span>SPI1<span class="op">-&gt;</span>SR <span class="op">&amp;</span> SPI_SR_RXNE<span class="op">));</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">*(</span>__IO <span class="dt">uint8_t</span> <span class="op">*)&amp;</span>SPI1<span class="op">-&gt;</span>DR<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<p>The STM32 waits for UART requests from the ESP8266, updates the LED or resolution if requested, reads the latest temperature, and sends back the HTML webpage. Temperature formatting uses integer hundredths because the default embedded <code>sprintf()</code> library did not correctly display floating-point format specifiers.</p>
+</section>
+<section id="spi-oscilloscope-verification" class="level2">
+<h2 class="anchored" data-anchor-id="spi-oscilloscope-verification">SPI Oscilloscope Verification</h2>
+<p>SPI communication was verified using a four-channel oscilloscope rather than a logic analyzer. The DS1722 configuration register was successfully read back as <code>0xE8</code>, confirming 12-bit continuous conversion. The sensor initially measured approximately 22°C, and the reading increased when the sensor was warmed by hand.</p>
+<p>The annotated oscilloscope capture below shows a complete temperature read. CH1 (yellow) is MISO, CH2 (green) is MOSI, CH3 (blue) is SCK, and CH4 (pink) is CE. CE remains HIGH throughout the three-byte transfer, with 24 total clock pulses. The STM32 sends <code>0x01 0x00 0x00</code>, and the sensor returns <code>0x40</code> (LSB) and <code>0x16</code> (MSB), corresponding to:</p>
+<p><span class="math display">\[
+T = \frac{\texttt{0x1640}}{256} = 22.25^\circ\text{C}
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/lab6_spi_capture.jpg" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>Annotated DS1722 SPI transaction captured with a four-channel oscilloscope.</figcaption>
+</figure>
+</div>
+<section id="spi-timing" class="level3">
+<h3 class="anchored" data-anchor-id="spi-timing">SPI Timing</h3>
+<p>The clock uses CPOL = 0 and CPHA = 1, meaning SCK idles LOW and data is sampled on the falling edge. With an 80 MHz peripheral clock and a prescaler of 32, the SPI frequency is 2.5 MHz.</p>
+<p><span class="math display">\[
+T_{SCK}=\frac{1}{2.5\text{ MHz}}=400\text{ ns}
+\]</span></p>
+<p>The expected HIGH and LOW times are each approximately 200 ns, exceeding the DS1722 minimum of 100 ns. The SPI frequency is also below the maximum of 5 MHz.</p>
+<p>The oscilloscope shows CE rising before the first clock pulse and remaining HIGH throughout the transaction. The datasheet requires a minimum CE setup time of 400 ns. The capture is consistent with this timing, although an exact cursor measurement was not taken.</p>
+</section>
+</section>
+<section id="webpage-verification" class="level2">
+<h2 class="anchored" data-anchor-id="webpage-verification">Webpage Verification</h2>
+<p>The ESP8266 hosted the webpage over its Wi-Fi network. The page displayed the measured temperature and current LED state. Refreshing the page updated the temperature, and the LED and 8–12-bit resolution controls were tested. The firmware writes the new resolution setting to the DS1722 configuration register when a button is selected.</p>
+<details>
+<summary>
+Working Lab 6 webpage
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/lab6_website.png" class="img-fluid figure-img" style="width:75.0%"></p>
+<figcaption>Working webpage showing temperature, LED state, and resolution controls.</figcaption>
+</figure>
+</div>
+</details>
+</section>
+<section id="schematic" class="level2">
+<h2 class="anchored" data-anchor-id="schematic">Schematic</h2>
+<p>The final schematic should show the off-board DS1722 circuit and connections to the MCU, including both 3.3 V supplies, SERMODE, ground, and the four SPI connections. The ESP8266 uses the development board’s existing mikroBUS socket. Components already present on the development board are not redrawn; see the <a href="https://hmc-e155.github.io/assets/doc/E155%20FA22%20Development%20Board%20Schematic.pdf">E155 development board schematic</a>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/lab6_schematic.jpg" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>Lab 6 off-board circuit schematic.</figcaption>
+</figure>
+</div>
+</section>
+<section id="requirements-verification" class="level2">
+<h2 class="anchored" data-anchor-id="requirements-verification">Requirements Verification</h2>
+<p>The design successfully reads temperature over SPI, serves the webpage over UART/Wi-Fi, controls the on-board LED, and offers 8–12-bit resolution settings. The driver uses CMSIS SPI registers, and the signed temperature conversion supports the required -10°C to 30°C range. The configuration readback, observed temperature response, and SPI waveform support the functionality of the hardware.</p>
+</section>
+<section id="ai-prototype-and-reflection" class="level2">
+<h2 class="anchored" data-anchor-id="ai-prototype-and-reflection">AI Prototype and Reflection</h2>
+<p>For the AI prototype, I used Claude to generate a web interface for monitoring temperature readings from the DS1722 sensor and controlling an LED. The generated HTML page included a live temperature display, trend graph, adjustable decimal precision, and an LED toggle. The initial prototype used simulated sensor data, with API endpoints defined for future communication with the microcontroller. The page was generated very quickly, but I was not the biggest fan of the layout, and I noticed that classmates who used similar prompts received nearly identical pages.</p>
+<p>I also asked Claude to generate a CMSIS-based SPI driver for the STM32L432KC. Its initial response assumed different pin assignments than my wiring. After I provided the correct pins (PA5 SCK, PA6 MISO, PB5 MOSI, and PB0 CE) and asked it to integrate the driver into a <code>main.c</code> program, the code worked on the hardware and retrieved temperature readings.</p>
+<p>One limitation was that Claude did not automatically organize the code into reusable <code>.c</code> and <code>.h</code> libraries; that would need to be requested separately. Even though the generated driver worked, the code still needs to be fully inspected, particularly the pin assignments, peripheral configuration, SPI timing, and datasheet requirements. It was useful for quickly getting a working prototype, but I would not use the generated code without reviewing it.</p>
+<details>
+<summary>
+AI-generated webpage
+</summary>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/lab6_ai_website.png" class="img-fluid figure-img" style="width:75.0%"></p>
+<figcaption>AI-generated webpage.</figcaption>
+</figure>
+</div>
+</details>
+<details>
+<summary>
+AI-generated DS1722 SPI driver (corrected pin assignments)
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/*</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * DS1722 temperature sensor driver</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"> * Target: STM32L432KC, CMSIS register access only (no HAL)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"> *</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"> * Pin mapping (SPI1, AF5):</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"> *   PA5 = SCK</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"> *   PA6 = MISO  (connects to DS1722 SDO)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"> *   PB5 = MOSI  (connects to DS1722 SDI)</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"> *   PB0 = CE    (GPIO, active HIGH)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"stm32l4xx.h"</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">/* ---- DS1722 registers (SPI addresses) ---- */</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DS1722_REG_CFG_READ   </span><span class="bn">0x00</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DS1722_REG_TEMP_LSB   </span><span class="bn">0x01</span><span class="pp">   </span><span class="co">/* MSB is at 0x02; burst reads auto-increment */</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DS1722_REG_CFG_WRITE  </span><span class="bn">0x80</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">/* Config register: 1 1 1 1SHOT R2 R1 R0 SD */</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DS1722_CFG_BASE       </span><span class="bn">0xE0</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DS1722_CFG_RES</span><span class="op">(</span><span class="pp">bits</span><span class="op">)</span><span class="pp">  </span><span class="op">((</span><span class="dt">uint8_t</span><span class="op">)(((</span><span class="pp">bits</span><span class="op">)</span><span class="pp"> </span><span class="op">-</span><span class="pp"> </span><span class="dv">8</span><span class="op">)</span><span class="pp"> </span><span class="op">&lt;&lt;</span><span class="pp"> </span><span class="dv">1</span><span class="op">))</span><span class="pp">   </span><span class="co">/* 8..12 bits */</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">/* CE is active HIGH on the DS1722 */</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DS1722_CE_HIGH</span><span class="op">()</span><span class="pp">  </span><span class="op">(</span><span class="pp">GPIOB</span><span class="op">-&gt;</span><span class="pp">BSRR </span><span class="op">=</span><span class="pp"> GPIO_BSRR_BS0</span><span class="op">)</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DS1722_CE_LOW</span><span class="op">()</span><span class="pp">   </span><span class="op">(</span><span class="pp">GPIOB</span><span class="op">-&gt;</span><span class="pp">BSRR </span><span class="op">=</span><span class="pp"> GPIO_BSRR_BR0</span><span class="op">)</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">/* Exchange one byte. Byte-wide DR access is required on the L4 so the</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">   FIFO doesn't pack/expect 16-bit frames. */</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">uint8_t</span> spi1_xfer<span class="op">(</span><span class="dt">uint8_t</span> tx<span class="op">)</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!(</span>SPI1<span class="op">-&gt;</span>SR <span class="op">&amp;</span> SPI_SR_TXE<span class="op">))</span> <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">*(</span><span class="dt">volatile</span> <span class="dt">uint8_t</span> <span class="op">*)&amp;</span>SPI1<span class="op">-&gt;</span>DR <span class="op">=</span> tx<span class="op">;</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!(</span>SPI1<span class="op">-&gt;</span>SR <span class="op">&amp;</span> SPI_SR_RXNE<span class="op">))</span> <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">*(</span><span class="dt">volatile</span> <span class="dt">uint8_t</span> <span class="op">*)&amp;</span>SPI1<span class="op">-&gt;</span>DR<span class="op">;</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="op">[</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> ds1722_init<span class="op">(</span><span class="dt">uint8_t</span> resolution_bits<span class="op">)</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* Clocks */</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    RCC<span class="op">-&gt;</span>AHB2ENR <span class="op">|=</span> RCC_AHB2ENR_GPIOAEN <span class="op">|</span> RCC_AHB2ENR_GPIOBEN<span class="op">;</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    RCC<span class="op">-&gt;</span>APB2ENR <span class="op">|=</span> RCC_APB2ENR_SPI1EN<span class="op">;</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* PA5 (SCK) and PA6 (MISO) -&gt; alternate function 5 */</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    GPIOA<span class="op">-&gt;</span>MODER <span class="op">&amp;=</span> <span class="op">~(</span>GPIO_MODER_MODE5 <span class="op">|</span> GPIO_MODER_MODE6<span class="op">);</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>    GPIOA<span class="op">-&gt;</span>MODER <span class="op">|=</span>  <span class="op">(</span>GPIO_MODER_MODE5_1 <span class="op">|</span> GPIO_MODER_MODE6_1<span class="op">);</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>    GPIOA<span class="op">-&gt;</span>AFR<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">&amp;=</span> <span class="op">~((</span><span class="bn">0xF</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">20</span><span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="bn">0xF</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">24</span><span class="op">));</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>    GPIOA<span class="op">-&gt;</span>AFR<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">|=</span>  <span class="op">((</span><span class="dv">5</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">20</span><span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="dv">5</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">24</span><span class="op">));</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* PB5 (MOSI) -&gt; alternate function 5 */</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    GPIOB<span class="op">-&gt;</span>MODER <span class="op">&amp;=</span> <span class="op">~</span>GPIO_MODER_MODE5<span class="op">;</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    GPIOB<span class="op">-&gt;</span>MODER <span class="op">|=</span>  GPIO_MODER_MODE5_1<span class="op">;</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    GPIOB<span class="op">-&gt;</span>AFR<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">&amp;=</span> <span class="op">~(</span><span class="bn">0xF</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">20</span><span class="op">);</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>    GPIOB<span class="op">-&gt;</span>AFR<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">|=</span>  <span class="op">(</span><span class="dv">5</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">20</span><span class="op">);</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* PB0 -&gt; push-pull output for CE, idle low */</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>    GPIOB<span class="op">-&gt;</span>MODER <span class="op">&amp;=</span> <span class="op">~</span>GPIO_MODER_MODE0<span class="op">;</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>    GPIOB<span class="op">-&gt;</span>MODER <span class="op">|=</span>  GPIO_MODER_MODE0_0<span class="op">;</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    DS1722_CE_LOW<span class="op">();</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* SPI1: master, software NSS, mode 1 (CPOL=0, CPHA=1), MSB first,</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="co">       fPCLK/4 (1 MHz at the default 4 MHz MSI; DS1722 max is 2 MHz) */</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>    SPI1<span class="op">-&gt;</span>CR1 <span class="op">=</span> SPI_CR1_MSTR <span class="op">|</span> SPI_CR1_SSM <span class="op">|</span> SPI_CR1_SSI <span class="op">|</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>                SPI_CR1_CPHA <span class="op">|</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> SPI_CR1_BR_Pos<span class="op">);</span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>    SPI1<span class="op">-&gt;</span>CR2 <span class="op">=</span> <span class="op">(</span><span class="dv">7</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> SPI_CR2_DS_Pos<span class="op">)</span> <span class="op">|</span> SPI_CR2_FRXTH<span class="op">;</span>   <span class="co">/* 8-bit frames */</span></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>    SPI1<span class="op">-&gt;</span>CR1 <span class="op">|=</span> SPI_CR1_SPE<span class="op">;</span></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>    <span class="co">/* Write config: continuous conversion (SD = 0), chosen resolution */</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>    DS1722_CE_HIGH<span class="op">();</span></span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>    spi1_xfer<span class="op">(</span>DS1722_REG_CFG_WRITE<span class="op">);</span></span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>    spi1_xfer<span class="op">(</span>DS1722_CFG_BASE <span class="op">|</span> DS1722_CFG_RES<span class="op">(</span>resolution_bits<span class="op">));</span></span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>SPI1<span class="op">-&gt;</span>SR <span class="op">&amp;</span> SPI_SR_BSY<span class="op">)</span> <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>    DS1722_CE_LOW<span class="op">();</span></span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a><span class="co">/* Returns temperature as signed fixed-point, 8 fractional bits</span></span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a><span class="co">   (degrees C = raw / 256.0). Resolution is 1/16 degC at 12 bits. */</span></span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a><span class="dt">int16_t</span> ds1722_read_raw<span class="op">(</span><span class="dt">void</span><span class="op">)</span></span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>    DS1722_CE_HIGH<span class="op">();</span></span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>    spi1_xfer<span class="op">(</span>DS1722_REG_TEMP_LSB<span class="op">);</span>          <span class="co">/* address phase */</span></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint8_t</span> lsb <span class="op">=</span> spi1_xfer<span class="op">(</span><span class="bn">0xFF</span><span class="op">);</span>           <span class="co">/* 0x01: fractional bits in [7:4] */</span></span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint8_t</span> msb <span class="op">=</span> spi1_xfer<span class="op">(</span><span class="bn">0xFF</span><span class="op">);</span>           <span class="co">/* 0x02: signed integer part */</span></span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>SPI1<span class="op">-&gt;</span>SR <span class="op">&amp;</span> SPI_SR_BSY<span class="op">)</span> <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a>    DS1722_CE_LOW<span class="op">();</span></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span><span class="dt">int16_t</span><span class="op">)(((</span><span class="dt">uint16_t</span><span class="op">)</span>msb <span class="op">&lt;&lt;</span> <span class="dv">8</span><span class="op">)</span> <span class="op">|</span> lsb<span class="op">);</span></span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a><span class="op">![</span>AI<span class="op">-</span>generated webpage<span class="op">.](</span>images<span class="op">/</span>lab6_ai_website<span class="op">.</span>png<span class="op">){</span>width<span class="op">=</span><span class="dv">75</span><span class="op">%}</span></span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> ds1722_read_celsius<span class="op">(</span><span class="dt">void</span><span class="op">)</span></span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span><span class="dt">float</span><span class="op">)</span>ds1722_read_raw<span class="op">()</span> <span class="op">/</span> <span class="fl">256.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a><span class="op">![</span>AI<span class="op">-</span>generated SPI function<span class="op">.](</span>images<span class="op">/</span>lab6_ai_spi<span class="op">.</span>png<span class="op">){</span>width<span class="op">=</span><span class="dv">75</span><span class="op">%}</span></span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a><span class="co">/* Example usage:</span></span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a><span class="co"> *</span></span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a><span class="co"> *   ds1722_init(12);          // 12-bit resolution</span></span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a><span class="co"> *   // wait ~1.2 s for the first conversion</span></span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a><span class="co"> *   float t = ds1722_read_celsius();</span></span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</section>
+<section id="time-spent" class="level2">
+<h2 class="anchored" data-anchor-id="time-spent">Time Spent</h2>
+<p>Total time spent on Lab 6: <strong>12</strong></p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/thivenanderson\.github\.io\/E155-Portfolio\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

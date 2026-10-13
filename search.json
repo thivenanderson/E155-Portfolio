@@ -18,7 +18,77 @@
     "href": "labs.html",
     "title": "E155 Labs",
     "section": "",
-    "text": "Lab 4: Digital Audio\n\n\nTimer-based digital audio on the STM32L432KC using a reusable memory-mapped timer library.\n\n\n\n\n\nSep 29, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 3: Keypad Scanner\n\n\nSynchronous keypad scanning, debouncing, multi-key handling, and two-digit display.\n\n\n\n\n\nSep 22, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 2: Multiplexed 7-Segment Display and Keypad Scanner\n\n\nTime-multiplexed dual 7-segment display, reusable counters, and keypad scanning.\n\n\n\n\n\nSep 15, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 1: FPGA and MCU Setup and Testing\n\n\nFPGA setup, combinational logic, 7-segment decoding, and sequential logic.\n\n\n\n\n\nSep 8, 2026\n\n\nThiven Anderson\n\n\n\n\n\nNo matching items"
+    "text": "Lab 6: The Internet of Things and Serial Peripheral Interface\n\n\nSPI temperature sensing with an STM32L432KC and ESP8266 webpage.\n\n\n\n\n\nOct 13, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 4: Digital Audio\n\n\nTimer-based digital audio on the STM32L432KC using a reusable memory-mapped timer library.\n\n\n\n\n\nSep 29, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 3: Keypad Scanner\n\n\nSynchronous keypad scanning, debouncing, multi-key handling, and two-digit display.\n\n\n\n\n\nSep 22, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 2: Multiplexed 7-Segment Display and Keypad Scanner\n\n\nTime-multiplexed dual 7-segment display, reusable counters, and keypad scanning.\n\n\n\n\n\nSep 15, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 1: FPGA and MCU Setup and Testing\n\n\nFPGA setup, combinational logic, 7-segment decoding, and sequential logic.\n\n\n\n\n\nSep 8, 2026\n\n\nThiven Anderson\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "labs/lab6/lab6.html",
+    "href": "labs/lab6/lab6.html",
+    "title": "Lab 6: The Internet of Things and Serial Peripheral Interface",
+    "section": "",
+    "text": "Lab 6 uses the STM32L432KC to read a DS1722 temperature sensor over SPI and communicate with an ESP8266 over UART. The ESP8266 hosts a webpage that displays temperature and LED status, turns the LED on or off, and allows the user to select the temperature resolution.\nThe code is available in the Lab 6 GitHub repository, and the design follows the Lab 6 specifications."
+  },
+  {
+    "objectID": "labs/lab6/lab6.html#introduction",
+    "href": "labs/lab6/lab6.html#introduction",
+    "title": "Lab 6: The Internet of Things and Serial Peripheral Interface",
+    "section": "",
+    "text": "Lab 6 uses the STM32L432KC to read a DS1722 temperature sensor over SPI and communicate with an ESP8266 over UART. The ESP8266 hosts a webpage that displays temperature and LED status, turns the LED on or off, and allows the user to select the temperature resolution.\nThe code is available in the Lab 6 GitHub repository, and the design follows the Lab 6 specifications."
+  },
+  {
+    "objectID": "labs/lab6/lab6.html#hardware",
+    "href": "labs/lab6/lab6.html#hardware",
+    "title": "Lab 6: The Internet of Things and Serial Peripheral Interface",
+    "section": "Hardware",
+    "text": "Hardware\nThe DS1722 is powered at 3.3 V, with SERMODE connected HIGH to select SPI. The ESP8266 Click module plugs into the development board’s mikroBUS socket and communicates with the STM32 through USART1 at 125000 baud. The FPGA DIP switches were opened to avoid conflicts with the MCU pins.\n\n\n\nDS1722 pin\nSignal\nConnection\n\n\n\n\n1, 8\nVDDD, VDDA\n3.3 V\n\n\n2\nCE\nPB0\n\n\n3\nSCLK\nPA5\n\n\n4\nGND\nGND\n\n\n5\nSDO\nPA6 (MISO)\n\n\n6\nSDI\nPB5 (MOSI)\n\n\n7\nSERMODE\n3.3 V\n\n\n\nThe STM32’s on-board LED is controlled through PB3."
+  },
+  {
+    "objectID": "labs/lab6/lab6.html#software-and-microcontroller-design",
+    "href": "labs/lab6/lab6.html#software-and-microcontroller-design",
+    "title": "Lab 6: The Internet of Things and Serial Peripheral Interface",
+    "section": "Software and Microcontroller Design",
+    "text": "Software and Microcontroller Design\nThe SPI library uses the CMSIS register definitions to configure SPI1 as a master, with 8-bit data transfers. The selected settings are initSPI(4, 0, 1): a divide-by-32 prescaler, idle-low clock, and sampling on the second clock edge (SPI Mode 1). With an 80 MHz SPI peripheral clock, the expected SPI clock is 2.5 MHz.\nThe DS1722 driver uses PB0 to control CE. It writes to the configuration register to enable continuous conversions and set the resolution from 8 to 12 bits. The initial configuration is 12-bit. For a temperature read, it transmits address 0x01, then reads the LSB and MSB in a three-byte burst. The bytes are combined as a signed 16-bit value and divided by 256 to obtain degrees Celsius. This also handles negative temperatures.\n\n\nSPI transfer function\n\nchar spiSendReceive(char send) {\n    while (!(SPI1-&gt;SR & SPI_SR_TXE));\n    *(__IO uint8_t *)&SPI1-&gt;DR = (uint8_t)send;\n\n    while (!(SPI1-&gt;SR & SPI_SR_RXNE));\n    return *(__IO uint8_t *)&SPI1-&gt;DR;\n}\n\nThe STM32 waits for UART requests from the ESP8266, updates the LED or resolution if requested, reads the latest temperature, and sends back the HTML webpage. Temperature formatting uses integer hundredths because the default embedded sprintf() library did not correctly display floating-point format specifiers."
+  },
+  {
+    "objectID": "labs/lab6/lab6.html#spi-oscilloscope-verification",
+    "href": "labs/lab6/lab6.html#spi-oscilloscope-verification",
+    "title": "Lab 6: The Internet of Things and Serial Peripheral Interface",
+    "section": "SPI Oscilloscope Verification",
+    "text": "SPI Oscilloscope Verification\nSPI communication was verified using a four-channel oscilloscope rather than a logic analyzer. The DS1722 configuration register was successfully read back as 0xE8, confirming 12-bit continuous conversion. The sensor initially measured approximately 22°C, and the reading increased when the sensor was warmed by hand.\nThe annotated oscilloscope capture below shows a complete temperature read. CH1 (yellow) is MISO, CH2 (green) is MOSI, CH3 (blue) is SCK, and CH4 (pink) is CE. CE remains HIGH throughout the three-byte transfer, with 24 total clock pulses. The STM32 sends 0x01 0x00 0x00, and the sensor returns 0x40 (LSB) and 0x16 (MSB), corresponding to:\n\\[\nT = \\frac{\\texttt{0x1640}}{256} = 22.25^\\circ\\text{C}\n\\]\n\n\n\nAnnotated DS1722 SPI transaction captured with a four-channel oscilloscope.\n\n\n\nSPI Timing\nThe clock uses CPOL = 0 and CPHA = 1, meaning SCK idles LOW and data is sampled on the falling edge. With an 80 MHz peripheral clock and a prescaler of 32, the SPI frequency is 2.5 MHz.\n\\[\nT_{SCK}=\\frac{1}{2.5\\text{ MHz}}=400\\text{ ns}\n\\]\nThe expected HIGH and LOW times are each approximately 200 ns, exceeding the DS1722 minimum of 100 ns. The SPI frequency is also below the maximum of 5 MHz.\nThe oscilloscope shows CE rising before the first clock pulse and remaining HIGH throughout the transaction. The datasheet requires a minimum CE setup time of 400 ns. The capture is consistent with this timing, although an exact cursor measurement was not taken."
+  },
+  {
+    "objectID": "labs/lab6/lab6.html#webpage-verification",
+    "href": "labs/lab6/lab6.html#webpage-verification",
+    "title": "Lab 6: The Internet of Things and Serial Peripheral Interface",
+    "section": "Webpage Verification",
+    "text": "Webpage Verification\nThe ESP8266 hosted the webpage over its Wi-Fi network. The page displayed the measured temperature and current LED state. Refreshing the page updated the temperature, and the LED and 8–12-bit resolution controls were tested. The firmware writes the new resolution setting to the DS1722 configuration register when a button is selected.\n\n\nWorking Lab 6 webpage\n\n\n\n\nWorking webpage showing temperature, LED state, and resolution controls."
+  },
+  {
+    "objectID": "labs/lab6/lab6.html#schematic",
+    "href": "labs/lab6/lab6.html#schematic",
+    "title": "Lab 6: The Internet of Things and Serial Peripheral Interface",
+    "section": "Schematic",
+    "text": "Schematic\nThe final schematic should show the off-board DS1722 circuit and connections to the MCU, including both 3.3 V supplies, SERMODE, ground, and the four SPI connections. The ESP8266 uses the development board’s existing mikroBUS socket. Components already present on the development board are not redrawn; see the E155 development board schematic.\n\n\n\nLab 6 off-board circuit schematic."
+  },
+  {
+    "objectID": "labs/lab6/lab6.html#requirements-verification",
+    "href": "labs/lab6/lab6.html#requirements-verification",
+    "title": "Lab 6: The Internet of Things and Serial Peripheral Interface",
+    "section": "Requirements Verification",
+    "text": "Requirements Verification\nThe design successfully reads temperature over SPI, serves the webpage over UART/Wi-Fi, controls the on-board LED, and offers 8–12-bit resolution settings. The driver uses CMSIS SPI registers, and the signed temperature conversion supports the required -10°C to 30°C range. The configuration readback, observed temperature response, and SPI waveform support the functionality of the hardware."
+  },
+  {
+    "objectID": "labs/lab6/lab6.html#ai-prototype-and-reflection",
+    "href": "labs/lab6/lab6.html#ai-prototype-and-reflection",
+    "title": "Lab 6: The Internet of Things and Serial Peripheral Interface",
+    "section": "AI Prototype and Reflection",
+    "text": "AI Prototype and Reflection\nFor the AI prototype, I used Claude to generate a web interface for monitoring temperature readings from the DS1722 sensor and controlling an LED. The generated HTML page included a live temperature display, trend graph, adjustable decimal precision, and an LED toggle. The initial prototype used simulated sensor data, with API endpoints defined for future communication with the microcontroller. The page was generated very quickly, but I was not the biggest fan of the layout, and I noticed that classmates who used similar prompts received nearly identical pages.\nI also asked Claude to generate a CMSIS-based SPI driver for the STM32L432KC. Its initial response assumed different pin assignments than my wiring. After I provided the correct pins (PA5 SCK, PA6 MISO, PB5 MOSI, and PB0 CE) and asked it to integrate the driver into a main.c program, the code worked on the hardware and retrieved temperature readings.\nOne limitation was that Claude did not automatically organize the code into reusable .c and .h libraries; that would need to be requested separately. Even though the generated driver worked, the code still needs to be fully inspected, particularly the pin assignments, peripheral configuration, SPI timing, and datasheet requirements. It was useful for quickly getting a working prototype, but I would not use the generated code without reviewing it.\n\n\nAI-generated webpage\n\n\n\n\nAI-generated webpage.\n\n\n\n\n\nAI-generated DS1722 SPI driver (corrected pin assignments)\n\n/*\n * DS1722 temperature sensor driver\n * Target: STM32L432KC, CMSIS register access only (no HAL)\n *\n * Pin mapping (SPI1, AF5):\n *   PA5 = SCK\n *   PA6 = MISO  (connects to DS1722 SDO)\n *   PB5 = MOSI  (connects to DS1722 SDI)\n *   PB0 = CE    (GPIO, active HIGH)\n */\n\n#include \"stm32l4xx.h\"\n#include &lt;stdint.h&gt;\n\n/* ---- DS1722 registers (SPI addresses) ---- */\n#define DS1722_REG_CFG_READ   0x00\n#define DS1722_REG_TEMP_LSB   0x01   /* MSB is at 0x02; burst reads auto-increment */\n#define DS1722_REG_CFG_WRITE  0x80\n\n/* Config register: 1 1 1 1SHOT R2 R1 R0 SD */\n#define DS1722_CFG_BASE       0xE0\n#define DS1722_CFG_RES(bits)  ((uint8_t)(((bits) - 8) &lt;&lt; 1))   /* 8..12 bits */\n\n/* CE is active HIGH on the DS1722 */\n#define DS1722_CE_HIGH()  (GPIOB-&gt;BSRR = GPIO_BSRR_BS0)\n#define DS1722_CE_LOW()   (GPIOB-&gt;BSRR = GPIO_BSRR_BR0)\n\n/* Exchange one byte. Byte-wide DR access is required on the L4 so the\n   FIFO doesn't pack/expect 16-bit frames. */\nstatic uint8_t spi1_xfer(uint8_t tx)\n{\n    while (!(SPI1-&gt;SR & SPI_SR_TXE)) { }\n    *(volatile uint8_t *)&SPI1-&gt;DR = tx;\n    while (!(SPI1-&gt;SR & SPI_SR_RXNE)) { }\n    return *(volatile uint8_t *)&SPI1-&gt;DR;\n}\n[\n\nvoid ds1722_init(uint8_t resolution_bits)\n{\n    /* Clocks */\n    RCC-&gt;AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN;\n    RCC-&gt;APB2ENR |= RCC_APB2ENR_SPI1EN;\n\n    /* PA5 (SCK) and PA6 (MISO) -&gt; alternate function 5 */\n    GPIOA-&gt;MODER &= ~(GPIO_MODER_MODE5 | GPIO_MODER_MODE6);\n    GPIOA-&gt;MODER |=  (GPIO_MODER_MODE5_1 | GPIO_MODER_MODE6_1);\n    GPIOA-&gt;AFR[0] &= ~((0xFUL &lt;&lt; 20) | (0xFUL &lt;&lt; 24));\n    GPIOA-&gt;AFR[0] |=  ((5UL &lt;&lt; 20) | (5UL &lt;&lt; 24));\n\n    /* PB5 (MOSI) -&gt; alternate function 5 */\n    GPIOB-&gt;MODER &= ~GPIO_MODER_MODE5;\n    GPIOB-&gt;MODER |=  GPIO_MODER_MODE5_1;\n    GPIOB-&gt;AFR[0] &= ~(0xFUL &lt;&lt; 20);\n    GPIOB-&gt;AFR[0] |=  (5UL &lt;&lt; 20);\n\n    /* PB0 -&gt; push-pull output for CE, idle low */\n    GPIOB-&gt;MODER &= ~GPIO_MODER_MODE0;\n    GPIOB-&gt;MODER |=  GPIO_MODER_MODE0_0;\n    DS1722_CE_LOW();\n\n    /* SPI1: master, software NSS, mode 1 (CPOL=0, CPHA=1), MSB first,\n       fPCLK/4 (1 MHz at the default 4 MHz MSI; DS1722 max is 2 MHz) */\n    SPI1-&gt;CR1 = SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI |\n                SPI_CR1_CPHA | (1U &lt;&lt; SPI_CR1_BR_Pos);\n    SPI1-&gt;CR2 = (7U &lt;&lt; SPI_CR2_DS_Pos) | SPI_CR2_FRXTH;   /* 8-bit frames */\n    SPI1-&gt;CR1 |= SPI_CR1_SPE;\n\n    /* Write config: continuous conversion (SD = 0), chosen resolution */\n    DS1722_CE_HIGH();\n    spi1_xfer(DS1722_REG_CFG_WRITE);\n    spi1_xfer(DS1722_CFG_BASE | DS1722_CFG_RES(resolution_bits));\n    while (SPI1-&gt;SR & SPI_SR_BSY) { }\n    DS1722_CE_LOW();\n}\n\n/* Returns temperature as signed fixed-point, 8 fractional bits\n   (degrees C = raw / 256.0). Resolution is 1/16 degC at 12 bits. */\nint16_t ds1722_read_raw(void)\n{\n    DS1722_CE_HIGH();\n    spi1_xfer(DS1722_REG_TEMP_LSB);          /* address phase */\n    uint8_t lsb = spi1_xfer(0xFF);           /* 0x01: fractional bits in [7:4] */\n    uint8_t msb = spi1_xfer(0xFF);           /* 0x02: signed integer part */\n    while (SPI1-&gt;SR & SPI_SR_BSY) { }\n    DS1722_CE_LOW();\n\n    return (int16_t)(((uint16_t)msb &lt;&lt; 8) | lsb);\n}\n![AI-generated webpage.](images/lab6_ai_website.png){width=75%}\n\nfloat ds1722_read_celsius(void)\n{\n    return (float)ds1722_read_raw() / 256.0f;\n}\n![AI-generated SPI function.](images/lab6_ai_spi.png){width=75%}\n\n/* Example usage:\n *\n *   ds1722_init(12);          // 12-bit resolution\n *   // wait ~1.2 s for the first conversion\n *   float t = ds1722_read_celsius();\n */"
+  },
+  {
+    "objectID": "labs/lab6/lab6.html#time-spent",
+    "href": "labs/lab6/lab6.html#time-spent",
+    "title": "Lab 6: The Internet of Things and Serial Peripheral Interface",
+    "section": "Time Spent",
+    "text": "Time Spent\nTotal time spent on Lab 6: 12"
   },
   {
     "objectID": "labs/lab4/lab4.html",
