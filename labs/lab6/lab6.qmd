@@ -31,11 +31,6 @@ The DS1722 is powered at 3.3 V, with SERMODE connected HIGH to select SPI. The E
 
 The STM32's on-board LED is controlled through PB3.
 
-[TODO: Add completed hardware photo if available.]
-
-<!--
-![Completed Lab 6 hardware.](images/lab6_hardware.jpeg){width=60%}
--->
 
 ## Software and Microcontroller Design
 
@@ -69,11 +64,9 @@ The scope capture shows a complete SPI temperature-read transaction. CH4 (pink) 
 <details>
 <summary>Full SPI read transaction</summary>
 
-[TODO: Add the scope capture as `images/lab6_spi_capture.jpeg`.]
 
-<!--
-![DS1722 read: CH1 yellow SDO/MISO, CH2 green SDI/MOSI, CH3 blue SCK, CH4 pink CE.](images/lab6_spi_capture.jpeg){width=100%}
--->
+![DS1722 read: CH1 yellow SDO/MISO, CH2 green SDI/MOSI, CH3 blue SCK, CH4 pink CE.](images/lab6_spi_capture.jpg){width=100%}
+
 
 </details>
 
@@ -90,11 +83,9 @@ The ESP8266 hosted the webpage over its Wi-Fi network. The page displayed the me
 <details>
 <summary>Working Lab 6 webpage</summary>
 
-[TODO: Insert a screenshot taken after the temperature-formatting fix.]
 
-<!--
-![Working webpage showing temperature, LED state, and resolution controls.](images/lab6_webpage.png){width=75%}
--->
+![Working webpage showing temperature, LED state, and resolution controls.](images/lab6_website.png){width=75%}
+
 
 </details>
 
@@ -102,17 +93,15 @@ The ESP8266 hosted the webpage over its Wi-Fi network. The page displayed the me
 
 The final schematic should show the off-board DS1722 circuit and connections to the MCU, including both 3.3 V supplies, SERMODE, ground, and the four SPI connections. The ESP8266 uses the development board's existing mikroBUS socket. Components already present on the development board are not redrawn; see the [E155 development board schematic](https://hmc-e155.github.io/assets/doc/E155%20FA22%20Development%20Board%20Schematic.pdf).
 
-[TODO: Insert final schematic, with component pin numbers, labels, and title block.]
 
-<!--
-![Lab 6 off-board circuit schematic.](images/lab6_schematic.png){width=85%}
--->
+
+![Lab 6 off-board circuit schematic.](images/lab6_schematic.jpg){width=85%}
+
 
 ## Requirements Verification
 
 The design successfully reads temperature over SPI, serves the webpage over UART/Wi-Fi, controls the on-board LED, and offers 8–12-bit resolution settings. The driver uses CMSIS SPI registers, and the signed temperature conversion supports the required -10°C to 30°C range. The configuration readback, observed temperature response, and SPI waveform support the functionality of the hardware.
 
-[TODO: Add the completed schematic and confirm the final logic analyzer/timing annotations for the documentation requirements.]
 
 ## AI Prototype and Reflection
 
