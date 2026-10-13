@@ -2,7 +2,7 @@
 title: "Lab 6: The Internet of Things and Serial Peripheral Interface"
 author: "Thiven Anderson"
 date: "10/13/26"
-description: "SPI temperature sensing with an STM32L432KC and an ESP8266 web interface."
+description: "SPI temperature sensing with an STM32L432KC and ESP8266 webpage."
 image: false
 categories:
   - lab reports
@@ -11,27 +11,37 @@ draft: false
 
 ## Introduction
 
-Lab 6 uses an STM32L432KC to read a DS1722 temperature sensor over SPI and communicate with an ESP8266 over UART. The webpage displays temperature and LED status, lets the user toggle the LED, and provides 8–12-bit temperature resolution settings.
+Lab 6 uses the STM32L432KC to read a DS1722 temperature sensor over SPI and communicate with an ESP8266 over UART. The ESP8266 hosts a webpage that displays temperature and LED status, turns the LED on or off, and allows the user to select the temperature resolution.
 
-The source code is available in the [Lab 6 GitHub repository](https://github.com/thivenanderson/E155-Lab6). The design follows the [Lab 6 specifications](https://hmc-e155.github.io/lab/lab6/specs.html).
+The code is available in the [Lab 6 GitHub repository](https://github.com/thivenanderson/E155-Lab6), and the design follows the [Lab 6 specifications](https://hmc-e155.github.io/lab/lab6/specs.html).
 
 ## Hardware
 
-The DS1722 uses SPI1 with PA5 (SCK), PA6 (MISO), PA7 (MOSI), and PA4 (CE). The ESP8266 communicates over USART1 at 125000 baud using PA9 (TX) and PA10 (RX), with TX and RX crossed between devices. The ESP8266 requires 3.3 V power. PB3 controls the on-board LED.
+The DS1722 is powered at 3.3 V, with SERMODE connected HIGH to select SPI. The ESP8266 Click module plugs into the development board's mikroBUS socket and communicates with the STM32 through USART1 at 125000 baud. The FPGA DIP switches were opened to avoid conflicts with the MCU pins.
 
-[TODO: Confirm wiring, sensor pin numbers, and open FPGA DIP switches during hardware testing.]
+| DS1722 pin | Signal | Connection |
+|---|---|---|
+| 1, 8 | VDDD, VDDA | 3.3 V |
+| 2 | CE | PB0 |
+| 3 | SCLK | PA5 |
+| 4 | GND | GND |
+| 5 | SDO | PA6 (MISO) |
+| 6 | SDI | PB5 (MOSI) |
+| 7 | SERMODE | 3.3 V |
 
-<!-- Add completed hardware photo:
+The STM32's on-board LED is controlled through PB3.
+
+[TODO: Add completed hardware photo if available.]
+
+<!--
 ![Completed Lab 6 hardware.](images/lab6_hardware.jpeg){width=60%}
 -->
 
 ## Software and Microcontroller Design
 
-The SPI driver uses the STM32 CMSIS register definitions to configure SPI1 as a master with 8-bit transfers, CPOL = 0, and CPHA = 1. It polls the transmit and receive flags to exchange one byte at a time.
+The SPI library uses the CMSIS register definitions to configure SPI1 as a master, with 8-bit data transfers. The selected settings are `initSPI(4, 0, 1)`: a divide-by-32 prescaler, idle-low clock, and sampling on the second clock edge (SPI Mode 1). With an 80 MHz SPI peripheral clock, the expected SPI clock is 2.5 MHz.
 
-The DS1722 driver controls CE, configures continuous conversion, and reads the temperature's two bytes. They are combined into a signed 16-bit value and divided by 256 to obtain degrees Celsius, including negative temperatures.
-
-The STM32 receives webpage requests from the ESP8266 over UART and returns HTML containing the latest temperature and LED state. Resolution buttons send requests that update the DS1722 configuration register.
+The DS1722 driver uses PB0 to control CE. It writes to the configuration register to enable continuous conversions and set the resolution from 8 to 12 bits. The initial configuration is 12-bit. For a temperature read, it transmits address `0x01`, then reads the LSB and MSB in a three-byte burst. The bytes are combined as a signed 16-bit value and divided by 256 to obtain degrees Celsius. This also handles negative temperatures.
 
 <details>
 <summary>SPI transfer function</summary>
@@ -48,28 +58,51 @@ char spiSendReceive(char send) {
 
 </details>
 
+The STM32 waits for UART requests from the ESP8266, updates the LED or resolution if requested, reads the latest temperature, and sends back the HTML webpage. Temperature formatting uses integer hundredths because the default embedded `sprintf()` library did not correctly display floating-point format specifiers.
+
 ## SPI Logic Analyzer Verification
 
-[TODO: Capture a complete temperature read using CE, SCK, SDO, and SDI. Label the register address, received bytes, and relevant timing. For Excellence, compare clock and CE timing to the DS1722 datasheet.]
+A configuration-register write and readback returned **`0xE8`**, confirming the DS1722 was configured for 12-bit continuous conversions. The sensor then measured approximately **22°C** at room temperature and increased when warmed by a finger.
+
+The scope capture shows a complete SPI temperature-read transaction. CH4 (pink) is CE, CH3 (blue) is SCK, CH2 (green) is SDI/MOSI, and CH1 (yellow) is SDO/MISO. CE remains HIGH across 24 clock pulses: eight for the `0x01` address and 16 to receive the two temperature bytes.
 
 <details>
-<summary>SPI temperature read capture</summary>
+<summary>Full SPI read transaction</summary>
 
-[TODO: Insert the labeled logic analyzer screenshot.]
+[TODO: Add the scope capture as `images/lab6_spi_capture.jpeg`.]
 
 <!--
-![Complete DS1722 SPI temperature read with labeled CE, SCK, SDO, and SDI.](images/lab6_spi_capture.png){width=100%}
+![DS1722 read: CH1 yellow SDO/MISO, CH2 green SDI/MOSI, CH3 blue SCK, CH4 pink CE.](images/lab6_spi_capture.jpeg){width=100%}
 -->
 
 </details>
 
+### SPI Timing
 
+The SPI clock is configured for 2.5 MHz, giving a 400 ns period and approximately 200 ns HIGH and LOW times. The [DS1722 datasheet](https://hmc-e155.github.io/assets/doc/ds1722.pdf) specifies a maximum clock frequency of 5 MHz and minimum HIGH/LOW times of 100 ns. The selected clock therefore provides timing margin.
+
+The scope capture also shows CE rising before the first SCK pulse and remaining HIGH throughout the read. The datasheet requires a minimum 400 ns CE-to-SCK setup time. Based on the 2 µs/div time scale, this delay appears to be approximately 0.5 µs; a cursor measurement would verify the exact value.
+
+## Webpage Verification
+
+The ESP8266 hosted the webpage over its Wi-Fi network. The page displayed the measured temperature and current LED state. Refreshing the page updated the temperature, and the LED and 8–12-bit resolution controls were tested. The firmware writes the new resolution setting to the DS1722 configuration register when a button is selected.
+
+<details>
+<summary>Working Lab 6 webpage</summary>
+
+[TODO: Insert a screenshot taken after the temperature-formatting fix.]
+
+<!--
+![Working webpage showing temperature, LED state, and resolution controls.](images/lab6_webpage.png){width=75%}
+-->
+
+</details>
 
 ## Schematic
 
-The schematic will show the off-board DS1722 and ESP8266 connections, labeled with component part numbers, physical pin numbers, signal names, power, and ground. The MCU and on-board LED are already shown in the [E155 development board schematic](https://hmc-e155.github.io/assets/doc/E155%20FA22%20Development%20Board%20Schematic.pdf) and will not be redrawn.
+The final schematic should show the off-board DS1722 circuit and connections to the MCU, including both 3.3 V supplies, SERMODE, ground, and the four SPI connections. The ESP8266 uses the development board's existing mikroBUS socket. Components already present on the development board are not redrawn; see the [E155 development board schematic](https://hmc-e155.github.io/lab/lab6/specs.html) linked by the lab specifications.
 
-[TODO: Add final schematic matching the actual wiring. Include component values, clear junctions, and a title block.]
+[TODO: Insert final schematic, with component pin numbers, labels, and title block.]
 
 <!--
 ![Lab 6 off-board circuit schematic.](images/lab6_schematic.png){width=85%}
@@ -77,28 +110,18 @@ The schematic will show the off-board DS1722 and ESP8266 connections, labeled wi
 
 ## Requirements Verification
 
-The firmware builds in SEGGER and includes the CMSIS SPI driver, signed temperature conversion, webpage LED controls, and 8–12-bit resolution selection. The signed reading format supports temperatures below zero, including the required −10°C to 30°C range.
+The design successfully reads temperature over SPI, serves the webpage over UART/Wi-Fi, controls the on-board LED, and offers 8–12-bit resolution settings. The driver uses CMSIS SPI registers, and the signed temperature conversion supports the required -10°C to 30°C range. The configuration readback, observed temperature response, and SPI waveform support the functionality of the hardware.
 
-[TODO: State whether all proficiency and excellence requirements were met after hardware testing. List any shortcomings.]
-<details>
-<summary>Webpage verification</summary>
-
-[TODO: Add a screenshot showing the live temperature, LED status, and resolution controls. Confirm that refreshing updates temperature and that controls work.]
-
-<!--
-![Lab 6 webpage showing temperature and controls.](images/lab6_webpage.png){width=75%}
--->
-
-</details>
+[TODO: Add the completed schematic and confirm the final logic analyzer/timing annotations for the documentation requirements.]
 
 ## AI Prototype and Reflection
 
-[TODO: Complete the AI prototype with a different LLM. Compare its generated temperature-control HTML webpage with its CMSIS DS1722 SPI function. Briefly discuss correctness, what worked in the project, and whether it performed better on HTML or embedded C.]
+[TODO: Complete the separate AI prototype. Compare another LLM's generated HTML webpage with its CMSIS-based DS1722 SPI function, noting what worked and which type of code it handled better.]
 
 <details>
 <summary>AI prototype results</summary>
 
-[TODO: Insert screenshots or selected code snippets from both prompts.]
+[TODO: Add generated webpage and SPI code screenshots or excerpts.]
 
 <!--
 ![AI-generated webpage.](images/lab6_ai_webpage.png){width=75%}
