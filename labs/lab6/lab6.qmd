@@ -63,16 +63,7 @@ char spiSendReceive(char send) {
 
 </details>
 
-<details>
-<summary>Webpage verification</summary>
 
-[TODO: Add a screenshot showing the live temperature, LED status, and resolution controls. Confirm that refreshing updates temperature and that controls work.]
-
-<!--
-![Lab 6 webpage showing temperature and controls.](images/lab6_webpage.png){width=75%}
--->
-
-</details>
 
 ## Schematic
 
@@ -89,6 +80,16 @@ The schematic will show the off-board DS1722 and ESP8266 connections, labeled wi
 The firmware builds in SEGGER and includes the CMSIS SPI driver, signed temperature conversion, webpage LED controls, and 8–12-bit resolution selection. The signed reading format supports temperatures below zero, including the required −10°C to 30°C range.
 
 [TODO: State whether all proficiency and excellence requirements were met after hardware testing. List any shortcomings.]
+<details>
+<summary>Webpage verification</summary>
+
+[TODO: Add a screenshot showing the live temperature, LED status, and resolution controls. Confirm that refreshing updates temperature and that controls work.]
+
+<!--
+![Lab 6 webpage showing temperature and controls.](images/lab6_webpage.png){width=75%}
+-->
+
+</details>
 
 ## AI Prototype and Reflection
 
