@@ -119,11 +119,13 @@ One limitation was that Claude did not automatically organize the code into reus
 <details>
 <summary>AI-generated webpage</summary>
 
-![AI-generated webpage.](images/lab6_ai_website.png.png){width=75%}
-
+![AI-generated webpage.](images/lab6_ai_website.png){width=75%}
 </details>
 
+
+
 <details>
+
 <summary>AI-generated DS1722 SPI driver (corrected pin assignments)</summary>
 
 ```c
@@ -163,6 +165,7 @@ static uint8_t spi1_xfer(uint8_t tx)
     while (!(SPI1->SR & SPI_SR_RXNE)) { }
     return *(volatile uint8_t *)&SPI1->DR;
 }
+[
 
 void ds1722_init(uint8_t resolution_bits)
 {
@@ -215,11 +218,13 @@ int16_t ds1722_read_raw(void)
 
     return (int16_t)(((uint16_t)msb << 8) | lsb);
 }
+![AI-generated webpage.](images/lab6_ai_website.png){width=75%}
 
 float ds1722_read_celsius(void)
 {
     return (float)ds1722_read_raw() / 256.0f;
 }
+![AI-generated SPI function.](images/lab6_ai_spi.png){width=75%}
 
 /* Example usage:
  *
