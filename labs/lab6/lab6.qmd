@@ -55,26 +55,31 @@ char spiSendReceive(char send) {
 
 The STM32 waits for UART requests from the ESP8266, updates the LED or resolution if requested, reads the latest temperature, and sends back the HTML webpage. Temperature formatting uses integer hundredths because the default embedded `sprintf()` library did not correctly display floating-point format specifiers.
 
-## SPI Logic Analyzer Verification
 
-A configuration-register write and readback returned **`0xE8`**, confirming the DS1722 was configured for 12-bit continuous conversions. The sensor then measured approximately **22°C** at room temperature and increased when warmed by a finger.
+## SPI Oscilloscope Verification
 
-The scope capture shows a complete SPI temperature-read transaction. CH4 (pink) is CE, CH3 (blue) is SCK, CH2 (green) is SDI/MOSI, and CH1 (yellow) is SDO/MISO. CE remains HIGH across 24 clock pulses: eight for the `0x01` address and 16 to receive the two temperature bytes.
+SPI communication was verified using a four-channel oscilloscope rather than a logic analyzer. The DS1722 configuration register was successfully read back as `0xE8`, confirming 12-bit continuous conversion. The sensor initially measured approximately 22°C, and the reading increased when the sensor was warmed by hand.
 
-<details>
-<summary>Full SPI read transaction</summary>
+The annotated oscilloscope capture below shows a complete temperature read. CH1 (yellow) is MISO, CH2 (green) is MOSI, CH3 (blue) is SCK, and CH4 (pink) is CE. CE remains HIGH throughout the three-byte transfer, with 24 total clock pulses. The STM32 sends `0x01 0x00 0x00`, and the sensor returns `0x40` (LSB) and `0x16` (MSB), corresponding to:
 
+$$
+T = \frac{\texttt{0x1640}}{256} = 22.25^\circ\text{C}
+$$
 
-![DS1722 read: CH1 yellow SDO/MISO, CH2 green SDI/MOSI, CH3 blue SCK, CH4 pink CE.](images/lab6_spi_capture.jpg){width=100%}
-
-
-</details>
+![Annotated DS1722 SPI transaction captured with a four-channel oscilloscope.](images/lab6_spi_capture.jpg){width=100%}
 
 ### SPI Timing
 
-The SPI clock is configured for 2.5 MHz, giving a 400 ns period and approximately 200 ns HIGH and LOW times. The [DS1722 datasheet](https://hmc-e155.github.io/assets/doc/ds1722.pdf) specifies a maximum clock frequency of 5 MHz and minimum HIGH/LOW times of 100 ns. The selected clock therefore provides timing margin.
+The clock uses CPOL = 0 and CPHA = 1, meaning SCK idles LOW and data is sampled on the falling edge. With an 80 MHz peripheral clock and a prescaler of 32, the SPI frequency is 2.5 MHz.
 
-The scope capture also shows CE rising before the first SCK pulse and remaining HIGH throughout the read. The datasheet requires a minimum 400 ns CE-to-SCK setup time. Based on the 2 µs/div time scale, this delay appears to be approximately 0.5 µs; a cursor measurement would verify the exact value.
+$$
+T_{SCK}=\frac{1}{2.5\text{ MHz}}=400\text{ ns}
+$$
+
+The expected HIGH and LOW times are each approximately 200 ns, exceeding the DS1722 minimum of 100 ns. The SPI frequency is also below the maximum of 5 MHz.
+
+The oscilloscope shows CE rising before the first clock pulse and remaining HIGH throughout the transaction. The datasheet requires a minimum CE setup time of 400 ns. The capture is consistent with this timing, although an exact cursor measurement was not taken.
+
 
 ## Webpage Verification
 
@@ -105,21 +110,23 @@ The design successfully reads temperature over SPI, serves the webpage over UART
 
 ## AI Prototype and Reflection
 
-[TODO: Complete the separate AI prototype. Compare another LLM's generated HTML webpage with its CMSIS-based DS1722 SPI function, noting what worked and which type of code it handled better.]
+For the AI prototype, I used Claude to generate a web interface for monitoring temperature readings from the DS1722 sensor and controlling an LED. The generated HTML page included a live temperature display, trend graph, adjustable decimal precision, and an LED toggle. The initial prototype used simulated sensor data, with API endpoints defined for future communication with the microcontroller. This was very quick but I was not the biggest fan of the webpage layout and from what I have seen it generates nearly indentical pages when given this prompt by fellow peers
+
+I also prompted Claude to generate a CMSIS-based SPI driver for the STM32L432KC to demonstrate how temperature readings could be retrieved from the DS1722.
 
 <details>
 <summary>AI prototype results</summary>
 
 [TODO: Add generated webpage and SPI code screenshots or excerpts.]
 
-<!--
-![AI-generated webpage.](images/lab6_ai_webpage.png){width=75%}
+
+![AI-generated webpage.](images/lab6_ai_website.png.png){width=75%}
 
 ![AI-generated SPI function.](images/lab6_ai_spi.png){width=75%}
--->
+
 
 </details>
 
 ## Time Spent
 
-Total time spent on Lab 6: **[TODO: hours]**
+Total time spent on Lab 6: **12**
