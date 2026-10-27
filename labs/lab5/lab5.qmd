@@ -170,10 +170,78 @@ The system uses EXTI interrupts rather than polling to detect encoder transition
 <!-- TODO: After final stopped test and schematic are complete, change this paragraph to explicitly state that all proficiency/excellence requirements were met, or list any remaining shortcoming. -->
 
 ## AI Prototype and Reflection
-**TODO**
 
-<!-- TODO: Add a small screenshot or short transcript/code example from the AI prototype if desired for documentation. -->
+For the AI prototype, I gave Claude the provided prompt asking it to generate interrupt handlers for a quadrature encoder on the STM32L432KC. I then provided my existing encoder interface so that its `encoder.c` and `encoder.h` could replace my implementation without changing `main.c`.
 
+Claude produced a more complex implementation than my original design. It used both edges of both encoder channels, a quadrature transition lookup table, TIM2 as a 1 MHz timestamp timer, and an eight-sample buffer to calculate velocity. It also included a timeout to report zero velocity when no encoder edges were detected.
+
+I placed the generated code on a separate `ai_prototype` branch and tested it as a replacement for my working encoder driver. The code compiled, but I was not able to get reliable encoder measurements from it on the hardware. I attempted to debug the implementation, but did not get it functioning before returning to my original design.
+
+My implementation was simpler: it used explicit quadrature-state comparisons to update a signed count and TIM6 to calculate velocity from the change in count over time. This version was easier for me to trace and debug and successfully measured both direction and velocity over the tested motor-speed range.
+
+The prototype showed that the LLM could generate a reasonable interrupt-based architecture, but the generated code was significantly more complex than necessary for this lab. Even when the code compiled, hardware testing was still required to determine whether the peripheral configuration and encoder behavior were correct.
+
+<details>
+<summary>AI-generated quadrature encoder prototype</summary>
+
+```c
+// Quadrature transition lookup table
+static const int8_t transition[16] = {
+     0, +1, -1,  0,
+    -1,  0,  0, +1,
+    +1,  0,  0, -1,
+     0, -1, +1,  0
+};
+
+static void processEdge(void) {
+    uint32_t now = TIM2->CNT;
+
+    uint8_t a = (GPIOB->IDR >> 5) & 0x1;
+    uint8_t b = (GPIOA->IDR >> 8) & 0x1;
+    uint8_t current_state = (a << 1) | b;
+
+    int8_t step =
+        transition[(previous_state << 2) | current_state];
+
+    previous_state = current_state;
+
+    if (step != 0) {
+        encoder_count += step;
+
+        samples[head].count = encoder_count;
+        samples[head].timestamp = now;
+        head = (head + 1) % SAMPLE_COUNT;
+    }
+}
+
+float encoderGetVelocity(void) {
+    EncoderSample newest = samples[head];
+    EncoderSample oldest = samples[(head + 1) % SAMPLE_COUNT];
+
+    int32_t delta_count = newest.count - oldest.count;
+    uint32_t delta_time = newest.timestamp - oldest.timestamp;
+
+    if (delta_time == 0) {
+        return 0.0f;
+    }
+
+    return ((float)delta_count * 1000000.0f) /
+           (ENCODER_COUNTS_PER_REV * (float)delta_time);
+}
+
+void EXTI9_5_IRQHandler(void) {
+    uint32_t pending = EXTI->PR1 &
+                       (EXTI_PR1_PIF5 | EXTI_PR1_PIF8);
+
+    EXTI->PR1 = pending;
+
+    if (pending) {
+        processEdge();
+    }
+}
+```
+
+</details>
 ## Time Spent
 
 Total time spent on Lab 5: **15**
