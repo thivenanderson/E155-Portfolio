@@ -18,7 +18,7 @@
     "href": "labs.html",
     "title": "E155 Labs",
     "section": "",
-    "text": "Lab 6: The Internet of Things and Serial Peripheral Interface\n\n\nSPI temperature sensing with an STM32L432KC and ESP8266 webpage.\n\n\n\n\n\nOct 13, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 4: Digital Audio\n\n\nTimer-based digital audio on the STM32L432KC using a reusable memory-mapped timer library.\n\n\n\n\n\nSep 29, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 3: Keypad Scanner\n\n\nSynchronous keypad scanning, debouncing, multi-key handling, and two-digit display.\n\n\n\n\n\nSep 22, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 2: Multiplexed 7-Segment Display and Keypad Scanner\n\n\nTime-multiplexed dual 7-segment display, reusable counters, and keypad scanning.\n\n\n\n\n\nSep 15, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 1: FPGA and MCU Setup and Testing\n\n\nFPGA setup, combinational logic, 7-segment decoding, and sequential logic.\n\n\n\n\n\nSep 8, 2026\n\n\nThiven Anderson\n\n\n\n\n\nNo matching items"
+    "text": "Lab 6: The Internet of Things and Serial Peripheral Interface\n\n\nSPI temperature sensing with an STM32L432KC and ESP8266 webpage.\n\n\n\n\n\nOct 13, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 5: Interrupts\n\n\nInterrupt-driven quadrature encoder measurement of motor direction and velocity using the STM32L432KC.\n\n\n\n\n\nOct 5, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 4: Digital Audio\n\n\nTimer-based digital audio on the STM32L432KC using a reusable memory-mapped timer library.\n\n\n\n\n\nSep 29, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 3: Keypad Scanner\n\n\nSynchronous keypad scanning, debouncing, multi-key handling, and two-digit display.\n\n\n\n\n\nSep 22, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 2: Multiplexed 7-Segment Display and Keypad Scanner\n\n\nTime-multiplexed dual 7-segment display, reusable counters, and keypad scanning.\n\n\n\n\n\nSep 15, 2026\n\n\nThiven Anderson\n\n\n\n\n\n\n\n\n\n\n\n\nLab 1: FPGA and MCU Setup and Testing\n\n\nFPGA setup, combinational logic, 7-segment decoding, and sequential logic.\n\n\n\n\n\nSep 8, 2026\n\n\nThiven Anderson\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "labs/lab6/lab6.html",
@@ -418,6 +418,76 @@
     "title": "Lab 3: Keypad Scanner",
     "section": "Time Spent",
     "text": "Time Spent\nTotal time spent on Lab 3: 25 hours"
+  },
+  {
+    "objectID": "labs/lab5/lab5.html",
+    "href": "labs/lab5/lab5.html",
+    "title": "Lab 5: Interrupts",
+    "section": "",
+    "text": "Lab 5 uses interrupts on the STM32L432KC to measure the direction and angular velocity of a DC motor from its quadrature encoder. Both edges of both encoder channels are used to update a signed encoder count. TIM6 provides the time base for converting changes in count into velocity, while TIM7 controls how often the result is printed.\nThe complete source code is available in the Lab 5 GitHub repository. The design follows the current Lab 5 specifications."
+  },
+  {
+    "objectID": "labs/lab5/lab5.html#introduction",
+    "href": "labs/lab5/lab5.html#introduction",
+    "title": "Lab 5: Interrupts",
+    "section": "",
+    "text": "Lab 5 uses interrupts on the STM32L432KC to measure the direction and angular velocity of a DC motor from its quadrature encoder. Both edges of both encoder channels are used to update a signed encoder count. TIM6 provides the time base for converting changes in count into velocity, while TIM7 controls how often the result is printed.\nThe complete source code is available in the Lab 5 GitHub repository. The design follows the current Lab 5 specifications."
+  },
+  {
+    "objectID": "labs/lab5/lab5.html#hardware",
+    "href": "labs/lab5/lab5.html#hardware",
+    "title": "Lab 5: Interrupts",
+    "section": "Hardware",
+    "text": "Hardware\nThe encoder channels are connected to PA8 and PB5. Both pins are listed as 5 V tolerant in the STM32L432KC datasheet, allowing them to safely receive the 5 V encoder outputs.\n\n\n\nSignal\nMCU pin\n\n\n\n\nEncoder A\nPA8\n\n\nEncoder B\nPB5\n\n\nEncoder power\n5 V\n\n\nEncoder ground\nGND\n\n\n\nThe calculations below use the 408 pulses/output-revolution value for the -34 motor.\n\n\n\nCompleted Lab 5 DC motor hardware."
+  },
+  {
+    "objectID": "labs/lab5/lab5.html#software-and-microcontroller-design",
+    "href": "labs/lab5/lab5.html#software-and-microcontroller-design",
+    "title": "Lab 5: Interrupts",
+    "section": "Software and Microcontroller Design",
+    "text": "Software and Microcontroller Design\n\nInterrupt-Based Quadrature Decoder\nPA8 and PB5 are configured as GPIO inputs and routed to EXTI8 and EXTI5. Interrupts are enabled on both rising and falling edges of both channels. The shared EXTI9_5_IRQHandler() reads the current two-bit encoder state and compares it with the previous state.\nOne valid state sequence increments the signed count,\n00 -&gt; 10 -&gt; 11 -&gt; 01 -&gt; 00\nwhile the reverse sequence decrements it,\n00 -&gt; 01 -&gt; 11 -&gt; 10 -&gt; 00\nFor the final wiring, positive velocity corresponds to clockwise rotation and negative velocity corresponds to counterclockwise rotation.\n\n\nQuadrature count update\n\nif ((previous_state == 0b00 && current_state == 0b10) ||\n    (previous_state == 0b10 && current_state == 0b11) ||\n    (previous_state == 0b11 && current_state == 0b01) ||\n    (previous_state == 0b01 && current_state == 0b00)) {\n    encoder_count++;\n}\nelse if ((previous_state == 0b00 && current_state == 0b01) ||\n         (previous_state == 0b01 && current_state == 0b11) ||\n         (previous_state == 0b11 && current_state == 0b10) ||\n         (previous_state == 0b10 && current_state == 0b00)) {\n    encoder_count--;\n}\n\n\n\nVelocity Calculation\nThe encoder produces 12 pulses per motor revolution. For a 34:1 gearbox this gives\n\\[\n12(34)=408\n\\]\npulses per output-shaft revolution. Because both edges of both encoder channels are used, the software count is\n\\[\nN_{rev}=4(408)=1632\\text{ counts/rev}.\n\\]\nTIM6 is configured as a free-running timer with a 1 ms count period. Velocity is calculated from the change in signed encoder count:\n\\[\nv=\\frac{\\Delta N}{1632\\left(\\Delta t_{ms}/1000\\right)}\n\\]\nwhere the sign of \\(v\\) gives direction.\nThe function allows an update after at least 100 ms. In the current main loop it is called once every 250 ms, so the displayed velocity updates at approximately 4 Hz, above the required 1 Hz. At a 250 ms measurement interval, one encoder count corresponds to approximately\n\\[\n\\frac{1}{1632(0.25)}\n\\approx 0.00245\\text{ rev/s}.\n\\]\n\n\nProgram Flow\n\n\n\n\n\nflowchart TD\n    A[Start] --&gt; B[encoderInit]\n    B --&gt; C[Configure PA8 and PB5]\n    C --&gt; D[Configure EXTI on both edges]\n    D --&gt; E[Start free-running TIM6]\n    E --&gt; F[Main loop]\n    F --&gt; G[Read signed encoder count]\n    G --&gt; H[Calculate velocity from count change and TIM6]\n    H --&gt; I[Print direction and rev/s]\n    I --&gt; J[TIM7 250 ms delay]\n    J --&gt; F\n\n    K[Encoder A or B edge] --&gt; L[EXTI9_5_IRQHandler]\n    L --&gt; M[Read current A/B state]\n    M --&gt; N[Compare previous and current state]\n    N --&gt; O[Increment or decrement encoder_count]\n    O --&gt; P[Save current state]\n\n    O -. shared encoder_count .-&gt; G"
+  },
+  {
+    "objectID": "labs/lab5/lab5.html#testing-and-results",
+    "href": "labs/lab5/lab5.html#testing-and-results",
+    "title": "Lab 5: Interrupts",
+    "section": "Testing and Results",
+    "text": "Testing and Results\nA manual one-revolution test produced approximately 1672 signed counts. The theoretical value is 1632 counts/rev, giving a difference of approximately\n\\[\n\\frac{|1672-1632|}{1632}(100)\\approx2.45\\%.\n\\]\nThe difference is consistent with the limited accuracy of manually marking and rotating exactly one revolution.\nAt 12 V, the motor produced a stable measured speed of approximately 2.9 rev/s. At the lowest tested voltage where the motor continued to rotate, approximately 0.4 V, the measured speed remained nonzero at approximately 0.05–0.07 rev/s."
+  },
+  {
+    "objectID": "labs/lab5/lab5.html#interrupts-compared-with-polling",
+    "href": "labs/lab5/lab5.html#interrupts-compared-with-polling",
+    "title": "Lab 5: Interrupts",
+    "section": "Interrupts Compared with Polling",
+    "text": "Interrupts Compared with Polling\nAt the maximum tested speed of approximately 2.9 rev/s at 12 V, the encoder produces\n\\[\n2.9(1632)=4733\\text{ encoder edges/s}.\n\\]\nThis corresponds to one encoder transition approximately every\n\\[\n\\frac{1}{4733}\\approx211\\ \\mu\\text{s}.\n\\]\nA polling implementation would therefore need to read both encoder channels faster than about 4.7 kHz, and preferably substantially faster, to avoid missing transitions. This polling would need to run continuously even when the motor is stopped.\nThe interrupt-based implementation instead allows the main loop to run independently while EXTI responds whenever an encoder edge occurs. At 2.9 rev/s, the MCU handles approximately 4733 encoder interrupts per second while still allowing the main loop to update and print velocity every 250 ms. This makes interrupts better suited for detecting short encoder transitions without requiring the main loop to continuously poll the GPIO pins."
+  },
+  {
+    "objectID": "labs/lab5/lab5.html#schematic",
+    "href": "labs/lab5/lab5.html#schematic",
+    "title": "Lab 5: Interrupts",
+    "section": "Schematic",
+    "text": "Schematic\nThe schematic shows only the off-board motor/encoder connections, including 5 V, ground, encoder A to PA8, encoder B to PB5, and the motor supply connections. Components already present on the E155 development board should not be redrawn; see the E155 development board schematic.\n\n\n\nLab 5 schematic"
+  },
+  {
+    "objectID": "labs/lab5/lab5.html#requirements-verification",
+    "href": "labs/lab5/lab5.html#requirements-verification",
+    "title": "Lab 5: Interrupts",
+    "section": "Requirements Verification",
+    "text": "Requirements Verification\nThe system uses EXTI interrupts rather than polling to detect encoder transitions and uses both edges of both channels. Direction is determined from the quadrature state sequence, and velocity is displayed in rev/s at approximately 4 Hz. PA8 and PB5 are 5 V-tolerant inputs. Testing showed stable operation around 2.9–3.0 rev/s at 12 V and a nonzero reading around 0.05–0.07 rev/s at the lowest tested motor speed."
+  },
+  {
+    "objectID": "labs/lab5/lab5.html#ai-prototype-and-reflection",
+    "href": "labs/lab5/lab5.html#ai-prototype-and-reflection",
+    "title": "Lab 5: Interrupts",
+    "section": "AI Prototype and Reflection",
+    "text": "AI Prototype and Reflection\nFor the AI prototype, I gave Claude the provided prompt asking it to generate interrupt handlers for a quadrature encoder on the STM32L432KC. I then provided my existing encoder interface so that its encoder.c and encoder.h could replace my implementation without changing main.c.\nClaude produced a more complex implementation than my original design. It used both edges of both encoder channels, a quadrature transition lookup table, TIM2 as a 1 MHz timestamp timer, and an eight-sample buffer to calculate velocity. It also included a timeout to report zero velocity when no encoder edges were detected.\nI placed the generated code on a separate ai_prototype branch and tested it as a replacement for my working encoder driver. The code compiled, but I was not able to get reliable encoder measurements from it on the hardware. I attempted to debug the implementation, but did not get it functioning before returning to my original design.\nMy implementation was simpler: it used explicit quadrature-state comparisons to update a signed count and TIM6 to calculate velocity from the change in count over time. This version was easier for me to trace and debug and successfully measured both direction and velocity over the tested motor-speed range.\nThe prototype showed that the LLM could generate a reasonable interrupt-based architecture, but the generated code was significantly more complex than necessary for this lab. Even when the code compiled, hardware testing was still required to determine whether the peripheral configuration and encoder behavior were correct.\n\n\nAI-generated quadrature encoder prototype\n\n// Quadrature transition lookup table\nstatic const int8_t transition[16] = {\n     0, +1, -1,  0,\n    -1,  0,  0, +1,\n    +1,  0,  0, -1,\n     0, -1, +1,  0\n};\n\nstatic void processEdge(void) {\n    uint32_t now = TIM2-&gt;CNT;\n\n    uint8_t a = (GPIOB-&gt;IDR &gt;&gt; 5) & 0x1;\n    uint8_t b = (GPIOA-&gt;IDR &gt;&gt; 8) & 0x1;\n    uint8_t current_state = (a &lt;&lt; 1) | b;\n\n    int8_t step =\n        transition[(previous_state &lt;&lt; 2) | current_state];\n\n    previous_state = current_state;\n\n    if (step != 0) {\n        encoder_count += step;\n\n        samples[head].count = encoder_count;\n        samples[head].timestamp = now;\n        head = (head + 1) % SAMPLE_COUNT;\n    }\n}\n\nfloat encoderGetVelocity(void) {\n    EncoderSample newest = samples[head];\n    EncoderSample oldest = samples[(head + 1) % SAMPLE_COUNT];\n\n    int32_t delta_count = newest.count - oldest.count;\n    uint32_t delta_time = newest.timestamp - oldest.timestamp;\n\n    if (delta_time == 0) {\n        return 0.0f;\n    }\n\n    return ((float)delta_count * 1000000.0f) /\n           (ENCODER_COUNTS_PER_REV * (float)delta_time);\n}\n\nvoid EXTI9_5_IRQHandler(void) {\n    uint32_t pending = EXTI-&gt;PR1 &\n                       (EXTI_PR1_PIF5 | EXTI_PR1_PIF8);\n\n    EXTI-&gt;PR1 = pending;\n\n    if (pending) {\n        processEdge();\n    }\n}"
+  },
+  {
+    "objectID": "labs/lab5/lab5.html#time-spent",
+    "href": "labs/lab5/lab5.html#time-spent",
+    "title": "Lab 5: Interrupts",
+    "section": "Time Spent",
+    "text": "Time Spent\nTotal time spent on Lab 5: 15"
   },
   {
     "objectID": "posts/first-post.html",
