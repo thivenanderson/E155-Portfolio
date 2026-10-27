@@ -6,7 +6,7 @@ description: "Interrupt-driven quadrature encoder measurement of motor direction
 image: false
 categories:
   - lab reports
-draft: true
+draft: false
 ---
 
 ## Introduction
@@ -28,7 +28,7 @@ The encoder channels are connected to PA8 and PB5. Both pins are listed as 5 V t
 
 The calculations below use the 408 pulses/output-revolution value for the `-34` motor.
 
-<!-- TODO: Confirm the exact motor part-number/gear-ratio label before final submission. -->
+![Completed Lab 5 DC motor hardware.](images/hardware.jpeg){width=50%}
 
 ## Software and Microcontroller Design
 
@@ -133,41 +133,35 @@ $$
 
 The difference is consistent with the limited accuracy of manually marking and rotating exactly one revolution.
 
-At 12 V, the motor produced a stable measured speed of approximately **2.9--3.0 rev/s**. At the lowest tested voltage where the motor continued to rotate, approximately **0.4 V**, the measured speed remained nonzero at approximately **0.05--0.07 rev/s**.
+At 12 V, the motor produced a stable measured speed of approximately **2.9 rev/s**. At the lowest tested voltage where the motor continued to rotate, approximately **0.4 V**, the measured speed remained nonzero at approximately **0.05--0.07 rev/s**.
 
-At 3.0 rev/s the interrupt rate is approximately
 
-$$
-3.0(1632)=4896\text{ encoder edges/s},
-$$
 
-or one edge approximately every
-
-$$
-\frac{1}{4896}\approx204\ \mu\text{s}.
-$$
-
-The encoder count and velocity remained stable at this speed during testing.
-
-A phone video was also recorded as an independent shaft-speed check.
-
-<!-- TODO: Add the voltage and encoder reading used for the phone-video test, then state the video-derived rev/s comparison. -->
-<!-- TODO: Confirm that stopping the shaft consistently prints exactly 0.000 rev/s and state that result here. -->
-<!-- TODO: Add one screenshot/photo of the final SEGGER output or hardware if useful. -->
 
 ## Interrupts Compared with Polling
 
-At the measured maximum speed of about 3 rev/s, encoder edges arrive roughly every 204 $\mu$s. A polling implementation would therefore need to read both encoder channels substantially faster than this interval at all times to reliably detect every transition. In contrast, the interrupt-driven implementation can leave the main loop on a 250 ms display interval while EXTI captures encoder transitions independently.
+At the maximum tested speed of approximately 2.9 rev/s at 12 V, the encoder produces
 
-Polling would continuously use processor time even while the motor is stopped, while the interrupt approach only runs the encoder handler when an edge occurs. The tradeoff is interrupt overhead: at 3 rev/s the MCU services approximately 4900 encoder interrupts per second.
+$$
+2.9(1632)=4733\text{ encoder edges/s}.
+$$
 
-<!-- TODO: If required at checkoff, add a measured polling-loop limit or a short direct polling test rather than relying only on this quantitative comparison. -->
+This corresponds to one encoder transition approximately every
+
+$$
+\frac{1}{4733}\approx211\ \mu\text{s}.
+$$
+
+A polling implementation would therefore need to read both encoder channels faster than about 4.7 kHz, and preferably substantially faster, to avoid missing transitions. This polling would need to run continuously even when the motor is stopped.
+
+The interrupt-based implementation instead allows the main loop to run independently while EXTI responds whenever an encoder edge occurs. At 2.9 rev/s, the MCU handles approximately 4733 encoder interrupts per second while still allowing the main loop to update and print velocity every 250 ms. This makes interrupts better suited for detecting short encoder transitions without requiring the main loop to continuously poll the GPIO pins.
+
 
 ## Schematic
 
-The final schematic should show only the off-board motor/encoder connections, including 5 V, ground, encoder A to PA8, encoder B to PB5, and the motor supply connections. Components already present on the E155 development board should not be redrawn; see the [E155 development board schematic](https://hmc-e155.github.io/assets/doc/E155%20FA22%20Development%20Board%20Schematic.pdf).
+The schematic shows only the off-board motor/encoder connections, including 5 V, ground, encoder A to PA8, encoder B to PB5, and the motor supply connections. Components already present on the E155 development board should not be redrawn; see the [E155 development board schematic](https://hmc-e155.github.io/assets/doc/E155%20FA22%20Development%20Board%20Schematic.pdf).
 
-<!-- TODO: Draw and add the final Lab 5 schematic with pin names/numbers, motor part number, power connections, author/title/date, and clean left-to-right signal flow. -->
+![Lab 5 schematic](images/schematic.jpg){width=50%}
 
 ## Requirements Verification
 
@@ -176,31 +170,11 @@ The system uses EXTI interrupts rather than polling to detect encoder transition
 <!-- TODO: After final stopped test and schematic are complete, change this paragraph to explicitly state that all proficiency/excellence requirements were met, or list any remaining shortcoming. -->
 
 ## AI Prototype and Reflection
-
-I used ChatGPT while developing the interrupt and encoder code. It was useful for organizing the EXTI setup into an encoder driver, explaining quadrature direction detection, and building the first velocity calculation. The generated suggestions still required verification against the reference manual and hardware. In particular, an early explanation of the `EXTICR` field width was incorrect and was corrected after checking the STM32 documentation, and a later counting problem turned out to be a wiring issue rather than software. The process was useful for getting to a testable implementation quickly, but register configuration and hardware behavior still needed to be checked directly.
+**TODO**
 
 <!-- TODO: Add a small screenshot or short transcript/code example from the AI prototype if desired for documentation. -->
 
-## Conclusion
-
-Lab 5 successfully used interrupt-driven quadrature decoding to determine motor direction and velocity. Both edges of both encoder channels were used, and the measured velocity remained stable from approximately 0.05--0.07 rev/s at low speed to approximately 2.9--3.0 rev/s at 12 V.
-
-<!-- TODO: Insert total hours below and remove all remaining TODO comments before setting draft: false. -->
-
 ## Time Spent
 
-Total time spent on Lab 5: **TODO hours**
+Total time spent on Lab 5: **15**
 
-## Draft TODOs
-
-- [ ] Confirm the motor part number / `-34` gear ratio.
-- [ ] Add final schematic.
-- [ ] Confirm stopped motor reports exactly 0 rev/s.
-- [ ] Add phone-video voltage and quantitative video comparison.
-- [ ] Add total hours.
-- [ ] Optional: add final output/hardware image.
-- [ ] Optional excellence check: measured polling comparison if instructor expects a direct test.
-- [ ] Code style: remove the unused/shadowed global debug variables in `main.c`.
-- [ ] Code style: move the TIM7 RCC register write out of `main.c` into a helper/driver.
-- [ ] Code style: replace remaining register/IRQ magic numbers with named constants or CMSIS symbols where practical.
-- [ ] Remove this TODO section and set `draft: false` before submission.
