@@ -1,0 +1,170 @@
+---
+title: "MicroPS: MCU–FPGA Racing Game"
+author: "Thiven Anderson"
+date: "2026-11-15"
+description: "A 2D racing game combining analog controls, STM32 firmware, and FPGA VGA graphics."
+categories:
+  - projects
+  - embedded systems
+  - FPGA
+draft: true
+toc: true
+---
+
+## Overview
+
+For our E155 final project, Anirudh Gupta and I are building a single-player racing game using an STM32L432KC microcontroller, an iCE40UP5K FPGA, and a VGA monitor. A joystick controls steering and a thumb throttle controls acceleration. The project brings together analog input acquisition, vehicle physics, serial communication, and real-time graphics.
+
+Our main division of work is MCU controls and firmware for Ani, and FPGA graphics, memory, and VGA for me. The interface between the two devices gives us a clear boundary for developing and testing the subsystems independently.
+
+[Project code](https://github.com/TheRealAniG/e155-final-project) · [FPGA branch](https://github.com/TheRealAniG/e155-final-project/tree/FPGA) · [MCU branch](https://github.com/TheRealAniG/e155-final-project/tree/MCU)
+
+<!-- TODO: Add a photo or short video of the working monitor demo here.
+Use a local images/ or media/ asset once available; do not link private Drive media. -->
+
+## System Architecture
+
+The MCU handles the inputs and vehicle state. The FPGA generates each display pixel from the track geometry and car pose. Sending position and orientation instead of a complete image keeps the communication interface small.
+
+| Subsystem | Responsibility |
+|---|---|
+| Joystick and thumb throttle | Produce analog control signals |
+| STM32 ADC and DMA | Acquire three input channels and transfer readings into memory |
+| MCU physics | Convert steering and throttle into speed, position, and heading |
+| SPI interface | Transfer complete display-state updates between MCU and FPGA |
+| FPGA graphics | Render the track, rotating car, and checkpoint arches |
+| VGA output | Drive RGB, horizontal sync, and vertical sync to the monitor |
+
+The complete design includes the SPI connection between the devices. The current hardware display demonstration uses an FPGA-generated trajectory, allowing the display to be checked independently of live inputs.
+
+## Analog Inputs and MCU Firmware
+
+The MCU branch contains register-level ADC and DMA drivers. ADC1 scans joystick X, joystick Y, and throttle in sequence. TIM6 triggers conversions, and DMA1 Channel 1 transfers 16-bit readings from the ADC data register into a three-element circular buffer. The main program reads that buffer and prints the values through the debug interface.
+
+The design-review demonstration tested ADC and DMA using manually applied voltages. This provided a way to check acquisition before connecting and calibrating the physical controls.
+
+| Input | Pin in current ADC source | ADC channel |
+|---|---|---|
+| Joystick X | PB0 | 15 |
+| Joystick Y | PB1 | 16 |
+| Thumb throttle | PA5 | 10 |
+
+These are the assignments in the MCU branch, rather than a final integrated wiring schematic. Calibration maps raw readings into steering and throttle commands; a joystick dead zone prevents small offsets around the center from continuously steering the car.
+
+DMA lets the acquisition hardware update memory without servicing each conversion in the main loop. It also creates a synchronization requirement: the physics update should use a consistent set of input readings rather than mixing samples from different scans.
+
+<!-- TODO: Confirm final input voltage ranges, calibration/dead-zone implementation,
+pin assignments after SPI integration, and coherent DMA-buffer handling.
+Add the final circuit schematic and measured input sampling rate. -->
+
+## Vehicle Physics
+
+The desktop physics implementation uses a kinematic bicycle model in portable C. Steering sets the front-wheel angle, while vehicle speed and wheelbase determine the turning rate:
+
+$$
+\dot{\theta} = \frac{v}{L}\tan(\delta)
+$$
+
+Here, $v$ is speed, $L$ is wheelbase, and $\delta$ is steering angle. This gives gradual turning rather than changing the velocity direction instantaneously.
+
+| Model considered | Benefit | Tradeoff |
+|---|---|---|
+| Direct arcade steering | Simple calculations and immediate response | Abrupt changes in travel direction |
+| Drifting model | Preserves momentum during turns | More state and tuning |
+| Kinematic bicycle | Turning depends on speed, steering angle, and wheelbase | Does not model lateral tire slip |
+
+The implemented model applies throttle acceleration and linear drag, averages the old and new speeds to calculate travel distance, and uses the midpoint heading to update position. Internal position remains floating point; rounding happens when exporting the display pose. The current model does not include collision response or lateral slip.
+
+The desktop demonstration runs physics at 100 Hz and exports 60 pose samples per second. Each exported row contains the car-center coordinates and sine/cosine coefficients scaled by 256. This keeps trigonometry on the MCU side and provides fixed-point values for the FPGA renderer.
+
+The original proposal used 1 kHz sampling and physics targets. Those targets are separate from the desktop demonstration; the final hardware rates and execution time still need to be measured.
+
+## FPGA Graphics and VGA
+
+### Rendering without a full framebuffer
+
+A 640 × 480 image at one byte per pixel would require 307,200 bytes. Instead of storing the entire screen, the FPGA generates the track directly from pixel coordinates and stores a small car sprite and palette.
+
+The car image is 32 × 32 pixels with a 4-bit palette index per pixel. Its raw bitmap is 512 bytes, plus 48 bytes for sixteen 24-bit palette entries. These are logical asset sizes; actual FPGA memory allocation depends on synthesis and packing.
+
+The renderer inverse-maps each screen coordinate into the sprite's local coordinates using the supplied sine and cosine. Palette index zero is transparent. This rotates a single image rather than storing a separate bitmap for every heading.
+
+### Pipeline alignment
+
+The sprite path has four stages: coordinate offsets, multiplication, texture-coordinate calculation, and synchronous memory lookup. Track graphics and visibility signals must align with the same pixel. The top-level design also delays horizontal and vertical sync to match the rendering pipeline before registering the VGA outputs.
+
+This alignment was an important part of making independently correct modules work together: a valid color is only useful if it reaches the monitor at the correct pixel time.
+
+### Frame timing
+
+The timing generator uses 640 × 480 visible pixels within an 800 × 525 total frame. At exactly 60 Hz, the required pixel clock is:
+
+$$
+f_{\text{pixel}} = 800 \times 525 \times 60 = 25.2\ \text{MHz}
+$$
+
+The current top-level code uses the internal high-frequency oscillator divided to a nominal 24 MHz. That corresponds to approximately 57.1 Hz with these frame dimensions, rather than a verified 60 Hz. The autonomous track demo now displays and loops on a physical monitor. A PLL-based pixel clock and measured sync timing are the next timing checks.
+
+<!-- TODO: Replace the oscillator paragraph with the final PLL configuration and
+scope measurements once implemented. Add a monitor photo and annotated sync capture. -->
+
+## MCU–FPGA Communication
+
+SPI carries display state rather than rendered pixels. The interface needs agreed coordinate units, signed-value encoding, byte order, and packet boundaries. A complete incoming state should be buffered and applied during vertical blanking so that one visible frame does not mix old and new positions.
+
+The existing autonomous demo already updates its position during blanking. Replacing its internally generated pose with the MCU state preserves the separation between vehicle simulation and pixel generation.
+
+The desktop pose file is a useful test interface, but it is not itself the final SPI packet format.
+
+<!-- TODO: Add final SPI pinout, mode, clock frequency, packet layout, receiver
+implementation, and a captured transaction. Confirm frame-boundary state handoff. -->
+
+## Verification and Current Results
+
+Testing starts at subsystem boundaries so a problem can be isolated before the full game is connected.
+
+| Area | Evidence available |
+|---|---|
+| Analog acquisition | ADC/DMA implementation and manual-voltage testing documented in the design review |
+| Physics | Desktop tests for straight motion, steering at rest, turn direction, and pose conversion |
+| Physics-to-display data | Desktop demo produces 180 rows of pose data for a three-second run |
+| FPGA graphics | Testbenches cover timing, sprite rotation/pipeline behavior, track rendering, and checkpoint arches |
+| VGA top level | Self-checking testbench checks frame counts, output alignment, blanking, motion, and reset |
+| Physical display | Autonomous car demonstration displays and loops on the monitor |
+| Integrated gameplay | Final live-control, SPI, timing, and gameplay measurements remain to be documented |
+
+The top-level testbench expects 640 × 480 visible pixels, 96 horizontal-sync pixel periods per line, two vertical-sync lines, and one blanking tick per frame. It also checks that the car position stays constant throughout the visible frame.
+
+<!-- TODO: Add dated simulation logs/screenshots and final hardware results.
+Do not label a testbench as a newly measured pass without running it. -->
+
+## Design Lessons and Next Steps
+
+The most useful architectural decision was separating vehicle motion from display generation. The physics can be exercised with scripted inputs, while the FPGA can be checked with a known trajectory. A shared pose representation then connects the two.
+
+The display also showed why memory and timing need to be designed together. Procedural track geometry reduces storage, while a pipelined sprite lookup supports continuous pixel output. The tradeoff is keeping the graphics, visibility, and sync paths aligned.
+
+Remaining work includes calibrated live controls, SPI state transfer, PLL timing, and integrated response measurements. The proposal also includes wall collisions, ordered checkpoints, lap timing, and a leaderboard. Rendering checkpoint arches does not yet establish that checkpoint scoring is implemented.
+
+<!-- TODO before final publication:
+- Confirm individual contributions beyond the proposal's division of work.
+- Resolve final braking behavior: proposal says release-to-brake; design review
+  describes the joystick button. Current desktop model uses drag when coasting.
+- Record final input/physics/display rates and measured input-to-visible latency.
+- Add resource utilization, final BOM, schematic, and a short gameplay video.
+- Update verification results and remove draft: true when ready.
+-->
+
+## References
+
+- [Project source and implementation branches](https://github.com/TheRealAniG/e155-final-project)
+- [Desktop physics documentation](https://github.com/TheRealAniG/e155-final-project/blob/FPGA/MCU/physics/README.md)
+- [VGA top-level implementation](https://github.com/TheRealAniG/e155-final-project/blob/FPGA/FPGA/rtl/fpga_top.sv)
+- [ADC and DMA firmware](https://github.com/TheRealAniG/e155-final-project/tree/MCU/MCU/src)
+
+<!-- Draft source notes, not public links:
+Drive proposal: 1fiSslISm0iNoLZjBpIJzmf_fp7wRtDgqarEp64QOsdE
+Design review: 1PKtBx5wEd2JJ240FYkoJWoZ0JUCRK2KqJH3_OregeZw
+Reviewed FPGA commit: fe3a68da2b04d7d8dce19a3f130d5a5c61076deb
+Reviewed MCU commit: b580280baf7eb1409e2d64ba80a5cb19bb8a0a51
+-->
